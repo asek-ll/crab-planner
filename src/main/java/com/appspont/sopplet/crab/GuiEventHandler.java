@@ -5,18 +5,15 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.input.Keyboard;
 
-public class GuiEventHandler
-{
-  @SubscribeEvent
-  public void onGuiKeyboardEvent( GuiScreenEvent.KeyboardInputEvent.Post event )
-  {
-    int eventKey = Keyboard.getEventKey();
+public class GuiEventHandler {
+    @SubscribeEvent
+    public void onGuiKeyboardEvent(GuiScreenEvent.KeyboardInputEvent.Post event) {
+        int eventKey = Keyboard.getEventKey();
 
-    if ( KeyBindings.SHOW_PLANNER.isActiveAndMatches( eventKey ) )
-    {
-      if (event.isCancelable()) {
-        event.setCanceled( true );
-      }
+        if (KeyBindings.SHOW_PLANNER.isActiveAndMatches(eventKey)) {
+            if (event.isCancelable()) {
+                event.setCanceled(true);
+            }
+        }
     }
-  }
 }

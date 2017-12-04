@@ -65,7 +65,7 @@ dependencies {
 //    compile fileTree(dir: 'libs', include: '*.jar')
     deobfProvided "mezz.jei:jei_1.10.2:3.14.7.420:api"
     runtime "mezz.jei:jei_1.10.2:3.14.7.420"
-//    provided "mezz.jei:jei_1.10.2:3.14.7.420"
+    compile "mezz.jei:jei_1.10.2:3.14.7.420"
 }
 
 processResources
