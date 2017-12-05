@@ -2,7 +2,6 @@ package com.appspont.sopplet.crab;
 
 import com.appspont.sopplet.crab.block.PlannerBlock;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -30,6 +29,6 @@ public class CrabDumperMod {
 
     @EventHandler
     public void serverStart(FMLServerStartingEvent event) {
-        event.registerServerCommand(new ExportCommand());
+        event.registerServerCommand(new PlannerCommand());
     }
 }
