@@ -12,13 +12,18 @@ import mezz.jei.api.recipe.transfer.IRecipeTransferRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 @JEIPlugin
 public class CrabJeiPlugin extends BlankModPlugin {
 
     private final File baseDir;
+    private static IJeiRuntime jeiRuntime;
+    private static IModRegistry modRegistry;
 
     public CrabJeiPlugin() {
         baseDir = new File(".", "dumps/crafting_handler");
@@ -28,14 +33,15 @@ public class CrabJeiPlugin extends BlankModPlugin {
     @Override
     public void register(IModRegistry registry) {
         final IRecipeTransferRegistry recipeTransferRegistry = registry.getRecipeTransferRegistry();
-
         recipeTransferRegistry.addUniversalRecipeTransferHandler(new PlannerContainerTransferHandler());
+        modRegistry = registry;
     }
 
     @Override
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         dumpRecipes(jeiRuntime.getRecipeRegistry());
         dumpItems(jeiRuntime.getItemListOverlay());
+        CrabJeiPlugin.jeiRuntime = jeiRuntime;
     }
 
     private void dumpItems(IItemListOverlay itemListOverlay) {
@@ -91,5 +97,13 @@ public class CrabJeiPlugin extends BlankModPlugin {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public static IJeiRuntime getJeiRuntime() {
+        return jeiRuntime;
+    }
+
+    public static IModRegistry getModRegistry() {
+        return modRegistry;
     }
 }
