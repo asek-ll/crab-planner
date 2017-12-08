@@ -116,13 +116,13 @@ public class StackUtils {
 
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.add("outputs", itemStacks2JsonObject(outputs));
+        jsonObject.add("result", itemStacks2JsonObject(outputs));
         final JsonArray inputJsonArray = new JsonArray();
         for (List<ItemStack> input : inputs) {
             inputJsonArray.add(itemStacks2JsonObject(input));
         }
 
-        jsonObject.add("inputs", inputJsonArray);
+        jsonObject.add("ingredients", inputJsonArray);
 
         return jsonObject;
     }
