@@ -1,24 +1,25 @@
 package com.appspont.sopplet.crab;
 
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
-import mezz.jei.api.ingredients.IIngredientRegistry;
-import mezz.jei.api.ingredients.IIngredientRenderer;
-import net.minecraft.client.gui.GuiButton;
+import com.google.common.collect.Lists;
+import mezz.jei.gui.ingredients.GuiIngredientFast;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import java.awt.Color;
 import java.io.IOException;
+import java.util.List;
 
 @SideOnly(Side.CLIENT)
 public class PlannerGui extends GuiContainer {
+
+    private final List<ItemStack> stacks = Lists.newArrayList();
 
     public PlannerGui(Container inventorySlotsIn) {
         super(inventorySlotsIn);
@@ -28,10 +29,22 @@ public class PlannerGui extends GuiContainer {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partialTicks);
+        drawTargets();
+    }
+
+    private void drawTargets() {
+        int x = 2;
+        for (ItemStack stack : stacks) {
+            final GuiIngredientFast guiIngredientFast = new GuiIngredientFast(x, 2, 5);
+            guiIngredientFast.setIngredient(stack);
+            guiIngredientFast.renderItemAndEffectIntoGUI();
+            x += 18;
+        }
     }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float ticks, int x, int y) {
+        drawRect(guiLeft, guiTop, xSize, ySize, Color.lightGray.getRGB());
 //        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 //        this.mc.getTextureManager().bindTexture(new ResourceLocation("textures/gui/container/crafting_table.png"));
 //        int i = (this.width - this.xSize) / 2;
@@ -58,13 +71,21 @@ public class PlannerGui extends GuiContainer {
             if (Mouse.getEventButtonState()) {
                 final ItemStack stackUnderMouse = CrabJeiPlugin.getJeiRuntime().getItemListOverlay().getStackUnderMouse();
                 if (stackUnderMouse != null) {
+//
+//                    final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
+//
+//                    final IIngredientRenderer<ItemStack> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
+//
+//                    mc.getRenderItem().renderItemAndEffectIntoGUI(null, stackUnderMouse, this.width / 2, this.height / 2);
+//                    ingredientRenderer.render(mc, this.width / 2, this.height / 2, stackUnderMouse);
+//
+//                    final GuiIngredientFast guiIngredientFast = new GuiIngredientFast(20, 20, 5);
+//
+//                    guiIngredientFast.setIngredient(stackUnderMouse);
+//
+//                    guiIngredientFast.renderItemAndEffectIntoGUI();
 
-                    final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
-
-                    final IIngredientRenderer<ItemStack> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
-
-                    mc.getRenderItem().renderItemAndEffectIntoGUI(null, stackUnderMouse, this.width / 2, this.height / 2);
-//                    ingredientRenderer.render(mc, this.width / 2, this.height/2, stackUnderMouse);
+                    stacks.add(stackUnderMouse);
 
                     return true;
                 }

@@ -2,6 +2,7 @@ package com.appspont.sopplet.crab;
 
 import com.appspont.sopplet.crab.block.PlannerBlock;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;

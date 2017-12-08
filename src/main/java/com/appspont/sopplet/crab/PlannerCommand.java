@@ -41,8 +41,11 @@ public class PlannerCommand implements ICommand {
 
         final Entity commandSenderEntity = iCommandSender.getCommandSenderEntity();
         if (commandSenderEntity instanceof EntityPlayer) {
-            final PlannerGui plannerGui = new PlannerGui(new PlannerContainer());
-            Minecraft.getMinecraft().displayGuiScreen(plannerGui);
+//            final PlannerGui plannerGui = new PlannerGui(new PlannerContainer());
+//            Minecraft.getMinecraft().displayGuiScreen(plannerGui);
+
+            final GuiItemIconDumper guiItemIconDumper = new GuiItemIconDumper(32);
+            Minecraft.getMinecraft().displayGuiScreen(guiItemIconDumper);
         }
 
         iCommandSender.addChatMessage(new TextComponentString("Hello world"));

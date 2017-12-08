@@ -26,7 +26,7 @@ public class CrabJeiPlugin extends BlankModPlugin {
     private static IModRegistry modRegistry;
 
     public CrabJeiPlugin() {
-        baseDir = new File(".", "dumps/crafting_handler");
+        baseDir = new File(".", "dumps");
         baseDir.mkdirs();
     }
 
@@ -40,28 +40,7 @@ public class CrabJeiPlugin extends BlankModPlugin {
     @Override
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         dumpRecipes(jeiRuntime.getRecipeRegistry());
-        dumpItems(jeiRuntime.getItemListOverlay());
         CrabJeiPlugin.jeiRuntime = jeiRuntime;
-    }
-
-    private void dumpItems(IItemListOverlay itemListOverlay) {
-        final ImmutableList<ItemStack> visibleStacks = itemListOverlay.getVisibleStacks();
-
-        final JsonArray items = new JsonArray();
-        for (ItemStack stack : visibleStacks) {
-            final JsonObject jsonObject = new JsonObject();
-            final Item item = stack.getItem();
-            final int idFromItem = Item.getIdFromItem(item);
-
-            jsonObject.addProperty("name", item.getUnlocalizedName());
-            jsonObject.addProperty("id", idFromItem);
-            jsonObject.addProperty("meta", item.getDamage(stack));
-            jsonObject.addProperty("sid", StackUtils.getItemId(stack));
-            jsonObject.addProperty("displayName", item.getItemStackDisplayName(stack));
-
-            items.add(jsonObject);
-        }
-        writeToFile("items.json", items.toString());
     }
 
     private void dumpRecipes(IRecipeRegistry recipeRegistry) {
