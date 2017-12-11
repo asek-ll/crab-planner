@@ -14,32 +14,6 @@ import java.util.List;
 public class StackUtils {
     private static List<String> modsList = new ArrayList<String>();
 
-//    private static String getModName(Item item) {
-//
-//        String modName = "unknown";
-//        final String itemName = Item.itemRegistry.getNameForObject(item);
-//        if (itemName != null) {
-//            final String[] parts = itemName.split(":");
-//            if (parts.length > 0 && parts[0] != null) {
-//                return parts[0];
-//            }
-//        }
-//
-//        return modName;
-//    }
-
-//    private static int getModIndex(Item item) {
-//        final String modName = getModName(item);
-//
-//        int modIndex = modsList.indexOf(modName);
-//
-//        if (modIndex < 0) {
-//            modIndex = modsList.size();
-//            modsList.add(modName);
-//        }
-//        return modIndex;
-//    }
-
     public static String getItemId(ItemStack itemStack) {
         final Item item = itemStack.getItem();
         final int idFromItem = Item.getIdFromItem(item);
@@ -119,7 +93,10 @@ public class StackUtils {
         jsonObject.add("result", itemStacks2JsonObject(outputs));
         final JsonArray inputJsonArray = new JsonArray();
         for (List<ItemStack> input : inputs) {
-            inputJsonArray.add(itemStacks2JsonObject(input));
+            final JsonArray element = itemStacks2JsonObject(input);
+            if (element.size() > 0) {
+                inputJsonArray.add(element);
+            }
         }
 
         jsonObject.add("ingredients", inputJsonArray);
