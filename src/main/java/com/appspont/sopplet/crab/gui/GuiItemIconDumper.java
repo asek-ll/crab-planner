@@ -1,7 +1,8 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.gui;
 
+import com.appspont.sopplet.crab.StackUtils;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mezz.jei.api.ingredients.IIngredientRegistry;
@@ -30,13 +31,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.IntBuffer;
 import java.util.Base64;
+import java.util.List;
 
 public class GuiItemIconDumper extends GuiScreen {
-    private final ImmutableList<ItemStack> visibleStacks;
+    private final List<ItemStack> visibleStacks;
 
     private int drawIndex;
     private int parseIndex;
-    private File dir = new File(".", "dumps/itempanel_icons");
+    private File dir = new File(".", "dumps");
     private int iconSize;
     private int borderSize;
     private int boxSize;
@@ -47,16 +49,11 @@ public class GuiItemIconDumper extends GuiScreen {
         this.iconSize = iconSize;
         borderSize = iconSize / 16;
         boxSize = iconSize + borderSize * 2;
-
-        if (dir.exists()) {
-            for (File f : dir.listFiles())
-                if (f.isFile()) f.delete();
-        } else
-            dir.mkdirs();
+        dir.mkdirs();
 
         mc = Minecraft.getMinecraft();
         final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
-        visibleStacks = ingredientRegistry.getIngredients(ItemStack.class);
+        visibleStacks = Lists.newArrayList(ingredientRegistry.getAllIngredients(ItemStack.class));
         ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
 
         items = new JsonArray();

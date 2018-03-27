@@ -3,7 +3,7 @@ package com.appspont.sopplet.crab;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mezz.jei.api.recipe.IRecipeWrapper;
-import mezz.jei.util.Ingredients;
+import mezz.jei.ingredients.Ingredients;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -36,7 +36,7 @@ public class StackUtils {
     private static JsonObject itemStack2JsonObject(ItemStack itemStack) {
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.addProperty("size", itemStack.stackSize);
+        jsonObject.addProperty("size", itemStack.getCount());
         jsonObject.addProperty("sid", getItemId(itemStack));
 
         return jsonObject;
@@ -85,12 +85,19 @@ public class StackUtils {
         final Ingredients ingredients = new Ingredients();
         recipeWrapper.getIngredients(ingredients);
 
-        final List<ItemStack> outputs = ingredients.getOutputs(ItemStack.class);
+        final List<List<ItemStack>> outputs = ingredients.getOutputs(ItemStack.class);
         final List<List<ItemStack>> inputs = ingredients.getInputs(ItemStack.class);
 
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.add("result", itemStacks2JsonObject(outputs));
+        jsonObject.add("result", tacksList2JsonObject(outputs));
+
+        jsonObject.add("ingredients", tacksList2JsonObject(inputs));
+
+        return jsonObject;
+    }
+
+    private static JsonArray tacksList2JsonObject(List<List<ItemStack>> inputs) {
         final JsonArray inputJsonArray = new JsonArray();
         for (List<ItemStack> input : inputs) {
             final JsonArray element = itemStacks2JsonObject(input);
@@ -98,10 +105,7 @@ public class StackUtils {
                 inputJsonArray.add(element);
             }
         }
-
-        jsonObject.add("ingredients", inputJsonArray);
-
-        return jsonObject;
+        return inputJsonArray;
     }
 
 }

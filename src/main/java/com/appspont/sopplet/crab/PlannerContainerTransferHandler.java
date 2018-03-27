@@ -21,12 +21,6 @@ public class PlannerContainerTransferHandler implements IRecipeTransferHandler {
         return PlannerContainer.class;
     }
 
-    @Override
-    @Nonnull
-    public String getRecipeCategoryUid() {
-        return Constants.UNIVERSAL_RECIPE_TRANSFER_UID;
-    }
-
     @Nullable
     @Override
     public IRecipeTransferError transferRecipe(@Nonnull Container container,

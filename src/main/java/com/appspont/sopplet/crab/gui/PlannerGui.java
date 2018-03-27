@@ -1,12 +1,18 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.gui;
 
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.Lists;
-import mezz.jei.gui.ingredients.GuiIngredientFast;
+import mezz.jei.api.ingredients.IIngredientRegistry;
+import mezz.jei.api.ingredients.IIngredientRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.config.HoverChecker;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -19,10 +25,35 @@ import java.util.List;
 @SideOnly(Side.CLIENT)
 public class PlannerGui extends GuiContainer {
 
-    private final List<ItemStack> stacks = Lists.newArrayList();
+    private final List<Goal> stacks = Lists.newArrayList();
+    private final IIngredientRenderer<ItemStack> ingredientRenderer;
+
+    private class Goal {
+        final ItemStack stack;
+        private final GuiTextField guiTextField;
+        private final HoverChecker hoverChecker;
+
+        public Goal(ItemStack stack) {
+            this.stack = stack;
+            guiTextField = new GuiTextField(0, mc.fontRenderer, 0, 0, 18, 18);
+            hoverChecker = new HoverChecker(0, 0, 0, 0, 0);
+            stack.setCount(9);
+        }
+
+        void render(int x, int y) {
+            ingredientRenderer.render(mc, x, y, stack);
+            guiTextField.y = y + 18;
+            guiTextField.x = x;
+            guiTextField.drawTextBox();
+            hoverChecker.updateBounds(y, y + 36, x, x + 18);
+        }
+    }
 
     public PlannerGui(Container inventorySlotsIn) {
         super(inventorySlotsIn);
+        final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
+        ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
+        mc = Minecraft.getMinecraft();
     }
 
     @Override
@@ -34,10 +65,8 @@ public class PlannerGui extends GuiContainer {
 
     private void drawTargets() {
         int x = 2;
-        for (ItemStack stack : stacks) {
-            final GuiIngredientFast guiIngredientFast = new GuiIngredientFast(x, 2, 5);
-            guiIngredientFast.setIngredient(stack);
-            guiIngredientFast.renderItemAndEffectIntoGUI();
+        for (Goal stack : stacks) {
+            stack.render(x, 2);
             x += 18;
         }
     }
@@ -85,7 +114,7 @@ public class PlannerGui extends GuiContainer {
 //
 //                    guiIngredientFast.renderItemAndEffectIntoGUI();
 
-                    stacks.add(stackUnderMouse);
+                    stacks.add(new Goal(stackUnderMouse));
 
                     return true;
                 }
@@ -117,6 +146,22 @@ public class PlannerGui extends GuiContainer {
                         MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Post(this));
                     }
                 }
+            }
+        }
+    }
+
+    @Override
+    protected void mouseClicked(int x, int y, int button) throws IOException {
+        for (Goal stack : stacks) {
+            stack.guiTextField.setFocused(stack.hoverChecker.checkHover(x, y));
+        }
+    }
+
+    @Override
+    protected void keyTyped(char key, int eventKey) throws IOException {
+        for (Goal stack : stacks) {
+            if (stack.guiTextField.isFocused()) {
+                stack.guiTextField.textboxKeyTyped(key, eventKey);
             }
         }
     }
