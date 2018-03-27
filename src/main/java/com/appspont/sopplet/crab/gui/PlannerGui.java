@@ -161,7 +161,16 @@ public class PlannerGui extends GuiContainer {
     protected void keyTyped(char key, int eventKey) throws IOException {
         for (Goal stack : stacks) {
             if (stack.guiTextField.isFocused()) {
-                stack.guiTextField.textboxKeyTyped(key, eventKey);
+
+                final char c = Character.toUpperCase(key);
+                if (c < 32 || (c >= '0' && c <= '9')) {
+                    stack.guiTextField.textboxKeyTyped(key, eventKey);
+                    try {
+                        final int i = Integer.parseInt(stack.guiTextField.getText());
+                        stack.stack.setCount(i);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
             }
         }
     }
