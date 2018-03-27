@@ -2,14 +2,17 @@ package com.appspont.sopplet.crab.gui;
 
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.Lists;
+import mezz.jei.api.IRecipeRegistry;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IIngredientRenderer;
+import mezz.jei.api.recipe.IFocus;
+import mezz.jei.api.recipe.IRecipeCategory;
+import mezz.jei.api.recipe.IRecipeWrapper;
+import mezz.jei.ingredients.Ingredients;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.HoverChecker;
@@ -27,6 +30,7 @@ public class PlannerGui extends GuiContainer {
 
     private final List<Goal> stacks = Lists.newArrayList();
     private final IIngredientRenderer<ItemStack> ingredientRenderer;
+    private final RecipeSelectorGui recipeSelectorGui = new RecipeSelectorGui();
 
     private class Goal {
         final ItemStack stack;
@@ -38,6 +42,7 @@ public class PlannerGui extends GuiContainer {
             guiTextField = new GuiTextField(0, mc.fontRenderer, 0, 0, 18, 18);
             hoverChecker = new HoverChecker(0, 0, 0, 0, 0);
             stack.setCount(9);
+
         }
 
         void render(int x, int y) {
@@ -61,6 +66,10 @@ public class PlannerGui extends GuiContainer {
         this.drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partialTicks);
         drawTargets();
+
+        if (recipeSelectorGui.isFocused()) {
+            recipeSelectorGui.drawScreen(mouseX, mouseY, partialTicks);
+        }
     }
 
     private void drawTargets() {
@@ -89,6 +98,8 @@ public class PlannerGui extends GuiContainer {
         this.xSize = this.width - 100;
 //        this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 2 - 24, "This is button a"));
 //        this.buttonList.add(new GuiButton(1, this.width / 2 - 100, this.height / 2 + 4, "This is button b"));
+        recipeSelectorGui.width = 100;
+        recipeSelectorGui.height = 100;
     }
 
     private boolean interceptMouseClick() {
@@ -155,6 +166,7 @@ public class PlannerGui extends GuiContainer {
         for (Goal stack : stacks) {
             stack.guiTextField.setFocused(stack.hoverChecker.checkHover(x, y));
         }
+//        recipeSelectorGui.setFocused(true);
     }
 
     @Override
@@ -173,5 +185,23 @@ public class PlannerGui extends GuiContainer {
                 }
             }
         }
+    }
+
+    private List<Ingredients> getStackIngredients(ItemStack stack) {
+
+        final List<Ingredients> ingredientList = Lists.newArrayList();
+        final IRecipeRegistry recipeRegistry = CrabJeiPlugin.getJeiRuntime().getRecipeRegistry();
+        final List<IRecipeCategory> recipeCategories = recipeRegistry.getRecipeCategories();
+        for (IRecipeCategory recipeCategory : recipeCategories) {
+            final List<IRecipeWrapper> recipeWrappers =
+                    recipeRegistry.getRecipeWrappers(recipeCategory, recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack));
+            for (IRecipeWrapper recipeWrapper : recipeWrappers) {
+                Ingredients ingredients = new Ingredients();
+                recipeWrapper.getIngredients(ingredients);
+                ingredientList.add(ingredients);
+            }
+        }
+
+        return ingredientList;
     }
 }
