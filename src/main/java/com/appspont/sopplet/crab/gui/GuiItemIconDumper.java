@@ -2,11 +2,13 @@ package com.appspont.sopplet.crab.gui;
 
 import com.appspont.sopplet.crab.StackUtils;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IIngredientRenderer;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
@@ -15,26 +17,30 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import javax.imageio.ImageIO;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.IntBuffer;
-import java.util.Base64;
+import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 
 public class GuiItemIconDumper extends GuiScreen {
-    private final List<ItemStack> visibleStacks;
+
+    private final Map<Class, IIngredientRenderer> renderers = new HashMap<>();
+    private final List<Object> visibleStacks = new ArrayList<>();
+
 
     private int drawIndex;
     private int parseIndex;
@@ -42,7 +48,6 @@ public class GuiItemIconDumper extends GuiScreen {
     private int iconSize;
     private int borderSize;
     private int boxSize;
-    private final IIngredientRenderer<ItemStack> ingredientRenderer;
     private final JsonArray items;
 
     public GuiItemIconDumper(int iconSize) {
@@ -53,8 +58,11 @@ public class GuiItemIconDumper extends GuiScreen {
 
         mc = Minecraft.getMinecraft();
         final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
-        visibleStacks = Lists.newArrayList(ingredientRegistry.getAllIngredients(ItemStack.class));
-        ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
+
+        for (Class ingredientType : INGREDIENT_TYPES.keySet()) {
+            visibleStacks.addAll(ingredientRegistry.getAllIngredients(ingredientType));
+            renderers.put(ingredientType, ingredientRegistry.getIngredientRenderer(ingredientType));
+        }
 
         items = new JsonArray();
     }
@@ -104,10 +112,6 @@ public class GuiItemIconDumper extends GuiScreen {
         }
     }
 
-    private void drawItem(int x, int y, ItemStack itemstack) {
-        ingredientRenderer.render(mc, x, y, itemstack);
-    }
-
     private void drawItems() {
         GlStateManager.matrixMode(GL11.GL_PROJECTION);
         GlStateManager.loadIdentity();
@@ -128,7 +132,9 @@ public class GuiItemIconDumper extends GuiScreen {
         for (int i = 0; drawIndex < visibleStacks.size() && i < fit; drawIndex++, i++) {
             int x = i % cols * 18;
             int y = i / cols * 18;
-            drawItem(x + 1, y + 1, visibleStacks.get(drawIndex));
+            final Object stack = visibleStacks.get(drawIndex);
+            final IIngredientRenderer renderer = renderers.get(stack.getClass());
+            renderer.render(mc, x + 1, y + 1, stack);
         }
 
         GL11.glFlush();
@@ -149,21 +155,53 @@ public class GuiItemIconDumper extends GuiScreen {
             returnScreen();
     }
 
-    private void exportImage(File dir, BufferedImage img, ItemStack stack) throws IOException {
-        final int idFromItem = Item.getIdFromItem(stack.getItem());
+    private static JsonObject itemStackToJsonObject(Object object) {
+        final ItemStack stack = (ItemStack) object;
+
+        final Item item = stack.getItem();
+        if (item instanceof ItemBlock) {
+            Block block = ((ItemBlock) item).getBlock();
+            Fluid fluid = FluidRegistry.lookupFluidForBlock(block);
+            if (fluid != null) {
+                final FluidStack fluidStack = new FluidStack(fluid, Fluid.BUCKET_VOLUME);
+                return fluidStackToJsonObject(fluidStack);
+            }
+        }
+
+
+        final JsonObject jsonObject = new JsonObject();
+
+        jsonObject.addProperty("name", item.getUnlocalizedName());
+        jsonObject.addProperty("id", Item.getIdFromItem(stack.getItem()));
+        jsonObject.addProperty("meta", item.getDamage(stack));
+        jsonObject.addProperty("sid", StackUtils.getItemId(stack));
+        jsonObject.addProperty("displayName", item.getItemStackDisplayName(stack));
+
+        return jsonObject;
+    }
+
+    private static JsonObject fluidStackToJsonObject(Object object) {
+        final FluidStack stack = (FluidStack) object;
+        final JsonObject jsonObject = new JsonObject();
+        final Fluid fluid = stack.getFluid();
+
+        jsonObject.addProperty("name", fluid.getUnlocalizedName());
+        final String itemId = StackUtils.getItemId(stack);
+        jsonObject.addProperty("id", itemId);
+        jsonObject.addProperty("sid", itemId);
+        jsonObject.addProperty("displayName", fluid.getLocalizedName(stack));
+
+        return jsonObject;
+    }
+
+    private void exportImage(File dir, BufferedImage img, Object stack) throws IOException {
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
 
+        final Function<Object, JsonObject> mapper = INGREDIENT_TYPES.get(stack.getClass());
+        final JsonObject jsonObject = mapper.apply(stack);
 
-        final JsonObject jsonObject = new JsonObject();
-        final Item item = stack.getItem();
-
-        jsonObject.addProperty("name", item.getUnlocalizedName());
-        jsonObject.addProperty("id", idFromItem);
-        jsonObject.addProperty("meta", item.getDamage(stack));
-        jsonObject.addProperty("sid", StackUtils.getItemId(stack));
-        jsonObject.addProperty("displayName", item.getItemStackDisplayName(stack));
         jsonObject.addProperty("icon", os.toString("UTF-8"));
 
         items.add(jsonObject);
@@ -212,4 +250,9 @@ public class GuiItemIconDumper extends GuiScreen {
 
         return img;
     }
+
+    private static final Map<Class, Function<Object, JsonObject>> INGREDIENT_TYPES = ImmutableMap.of(
+            ItemStack.class, GuiItemIconDumper::itemStackToJsonObject,
+            FluidStack.class, GuiItemIconDumper::fluidStackToJsonObject
+    );
 }

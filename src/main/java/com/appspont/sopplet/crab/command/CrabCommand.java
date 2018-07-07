@@ -1,6 +1,8 @@
 package com.appspont.sopplet.crab.command;
 
+import com.appspont.sopplet.crab.RecipeExporter;
 import com.appspont.sopplet.crab.gui.GuiItemIconDumper;
+import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommand;
@@ -38,6 +40,10 @@ public class CrabCommand implements ICommand {
 
         final Entity commandSenderEntity = iCommandSender.getCommandSenderEntity();
         if (commandSenderEntity instanceof EntityPlayer) {
+
+            final RecipeExporter recipeExporter = new RecipeExporter();
+            recipeExporter.dumpRecipes(CrabJeiPlugin.getJeiRuntime().getRecipeRegistry());
+
             final GuiItemIconDumper guiItemIconDumper = new GuiItemIconDumper(32);
             Minecraft.getMinecraft().displayGuiScreen(guiItemIconDumper);
         }

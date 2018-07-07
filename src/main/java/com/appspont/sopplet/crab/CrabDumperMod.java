@@ -14,7 +14,7 @@ public class CrabDumperMod {
     public static final String MOD_ID = "crab";
     public static final String VERSION = "1.0";
 
-    public static final Block PLANNER_BLOCK = new PlannerBlock();
+//    public static final Block PLANNER_BLOCK = new PlannerBlock();
 
     @SidedProxy(clientSide = "com.appspont.sopplet.crab.ClientProxy", serverSide = "com.appspont.sopplet.crab.Proxy")
     static private Proxy proxy;
