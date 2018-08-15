@@ -1,5 +1,6 @@
 package com.appspont.sopplet.crab.gui;
 
+import com.appspont.sopplet.crab.PlannerContainer;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.Lists;
 import mezz.jei.api.IRecipeRegistry;
@@ -31,6 +32,7 @@ public class PlannerGui extends GuiContainer {
     private final List<Goal> stacks = Lists.newArrayList();
     private final IIngredientRenderer<ItemStack> ingredientRenderer;
     private final RecipeSelectorGui recipeSelectorGui = new RecipeSelectorGui();
+    private final PlannerContainer plannerContainer;
 
     private class Goal {
         final ItemStack stack;
@@ -54,11 +56,12 @@ public class PlannerGui extends GuiContainer {
         }
     }
 
-    public PlannerGui(Container inventorySlotsIn) {
-        super(inventorySlotsIn);
+    public PlannerGui(PlannerContainer plannerContainer) {
+        super(plannerContainer);
         final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
         ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
         mc = Minecraft.getMinecraft();
+        this.plannerContainer = plannerContainer;
     }
 
     @Override
@@ -126,6 +129,7 @@ public class PlannerGui extends GuiContainer {
 //                    guiIngredientFast.renderItemAndEffectIntoGUI();
 
                     stacks.add(new Goal(stackUnderMouse));
+                    plannerContainer.addGoal(stackUnderMouse);
 
                     return true;
                 }
