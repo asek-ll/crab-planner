@@ -9,6 +9,7 @@ import java.util.List;
 
 public class PlannerContainer extends Container {
     private final List<ItemStack> goals = Lists.newArrayList();
+    private final List<Recipe> recipes = Lists.newArrayList();
 
     @Override
     public boolean canInteractWith(EntityPlayer entityPlayer) {
@@ -20,6 +21,32 @@ public class PlannerContainer extends Container {
     }
 
     public void addRecipe(List<ItemStack> outputs, List<ItemStack> ingredients) {
+        recipes.add(new Recipe(outputs, ingredients));
+    }
 
+    public List<ItemStack> getGoals() {
+        return goals;
+    }
+
+    public List<Recipe> getRecipes() {
+        return recipes;
+    }
+
+    public static class Recipe {
+        private final List<ItemStack> result;
+        private final List<ItemStack> ingredients;
+
+        public Recipe(List<ItemStack> result, List<ItemStack> ingredients) {
+            this.result = result;
+            this.ingredients = ingredients;
+        }
+
+        public List<ItemStack> getResult() {
+            return result;
+        }
+
+        public List<ItemStack> getIngredients() {
+            return ingredients;
+        }
     }
 }

@@ -11,9 +11,10 @@ import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.ingredients.Ingredients;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.HoverChecker;
@@ -33,6 +34,9 @@ public class PlannerGui extends GuiContainer {
     private final IIngredientRenderer<ItemStack> ingredientRenderer;
     private final RecipeSelectorGui recipeSelectorGui = new RecipeSelectorGui();
     private final PlannerContainer plannerContainer;
+    private final Goals goals;
+    private Tooltip tooltip = null;
+    private boolean tooltipInvoked = false;
 
     private class Goal {
         final ItemStack stack;
@@ -56,30 +60,155 @@ public class PlannerGui extends GuiContainer {
         }
     }
 
+    private abstract class Tooltip<T> {
+        final T source;
+        private final HoverChecker hoverChecker;
+        final int x;
+        final int y;
+        final int width;
+        final int height;
+
+        private Tooltip(T source, int x, int y, int width, int height) {
+            this.source = source;
+            this.hoverChecker = new HoverChecker(y, y + height, x, x + width, 0);
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        boolean isHover(int x, int y) {
+            return hoverChecker.checkHover(x, y);
+        }
+
+        boolean isSameCaller(Object caller) {
+            return source.equals(caller);
+        }
+
+        abstract void draw(int x, int y);
+
+        public abstract void handleClick(int x, int y, int button);
+    }
+
+    private class GoalTooltip extends Tooltip<ItemStack> {
+
+        private final GuiButton delete;
+
+        private GoalTooltip(ItemStack source, int x, int y) {
+            super(source, x, y, 100, 100);
+            delete = new GuiButton(1, x + 4, y + 4, 100 - 8, 20, "Delete");
+        }
+
+        @Override
+        void draw(int x, int y) {
+            drawRect(this.x, this.y, this.x + width, this.y + height, Color.red.getRGB());
+            delete.drawButton(Minecraft.getMinecraft(), x, y, 0);
+        }
+
+        @Override
+        public void handleClick(int x, int y, int button) {
+            if (delete.isMouseOver()) {
+                plannerContainer.getGoals().remove(source);
+            }
+        }
+    }
+
+    public class Goals extends GuiSlot {
+
+        public Goals(Minecraft mc) {
+            super(mc, 100, 200, 2, 200, 0);
+        }
+
+        @Override
+        protected int getSize() {
+            return plannerContainer.getGoals().size();
+        }
+
+        @Override
+        protected void elementClicked(int i, boolean b, int i1, int i2) {
+
+        }
+
+        @Override
+        protected boolean isSelected(int i) {
+            return false;
+        }
+
+        @Override
+        protected void drawBackground() {
+
+        }
+
+        @Override
+        protected void drawSlot(int i, int i1, int i2, int i3, int i4, int i5, float v) {
+
+        }
+    }
+
+
     public PlannerGui(PlannerContainer plannerContainer) {
         super(plannerContainer);
         final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
         ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
         mc = Minecraft.getMinecraft();
         this.plannerContainer = plannerContainer;
+        goals = new Goals(mc);
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        tooltipInvoked = tooltip != null && tooltip.isHover(mouseX, mouseY);
+
         this.drawDefaultBackground();
+
         super.drawScreen(mouseX, mouseY, partialTicks);
-        drawTargets();
+//        drawTargets(mouseX, mouseY);
+        goals.drawScreen(mouseX, mouseY, partialTicks);
+
+        drawRecipes(mouseX, mouseY);
 
         if (recipeSelectorGui.isFocused()) {
             recipeSelectorGui.drawScreen(mouseX, mouseY, partialTicks);
         }
+
+
+        if (tooltipInvoked) {
+            tooltip.draw(mouseX, mouseY);
+        } else {
+            tooltip = null;
+        }
     }
 
-    private void drawTargets() {
-        int x = 2;
-        for (Goal stack : stacks) {
-            stack.render(x, 2);
+    private void drawRecipes(int mouseX, int mouseY) {
+        int y = 100;
+        for (PlannerContainer.Recipe recipe : plannerContainer.getRecipes()) {
+            int x = 2;
+            for (ItemStack itemStack : recipe.getResult()) {
+                ingredientRenderer.render(mc, x, y, itemStack);
+                x += 18;
+            }
             x += 18;
+            for (ItemStack itemStack : recipe.getIngredients()) {
+                ingredientRenderer.render(mc, x, y, itemStack);
+                x += 18;
+            }
+            y += 18;
+        }
+    }
+
+    private void drawTargets(int mouseX, int mouseY) {
+        int y = 2;
+        for (ItemStack goal : plannerContainer.getGoals()) {
+            ingredientRenderer.render(mc, 2, y, goal);
+
+            if (!tooltipInvoked && mouseX >= 2 && mouseX <= 2 + 16 && mouseY >= y && mouseY <= y + 16) {
+                tooltipInvoked = true;
+                if (tooltip == null || !tooltip.isSameCaller(goal)) {
+                    tooltip = new GoalTooltip(goal, 2 + 16, y);
+                }
+            }
+
+            y += 18;
         }
     }
 
@@ -128,7 +257,7 @@ public class PlannerGui extends GuiContainer {
 //
 //                    guiIngredientFast.renderItemAndEffectIntoGUI();
 
-                    stacks.add(new Goal(stackUnderMouse));
+//                    stacks.add(new Goal(stackUnderMouse));
                     plannerContainer.addGoal(stackUnderMouse);
 
                     return true;
@@ -167,6 +296,9 @@ public class PlannerGui extends GuiContainer {
 
     @Override
     protected void mouseClicked(int x, int y, int button) throws IOException {
+        if (tooltip != null) {
+            tooltip.handleClick(x, y, button);
+        }
         for (Goal stack : stacks) {
             stack.guiTextField.setFocused(stack.hoverChecker.checkHover(x, y));
         }

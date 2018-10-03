@@ -39,10 +39,13 @@ public class PlannerContainerTransferHandler implements IRecipeTransferHandler<P
             final List<ItemStack> outputs = Lists.newArrayList();
             final List<ItemStack> ingredients = Lists.newArrayList();
             for (IGuiIngredient<ItemStack> itemStackIGuiIngredient : guiIngredients.values()) {
-                if (itemStackIGuiIngredient.isInput()) {
-                    ingredients.add(itemStackIGuiIngredient.getDisplayedIngredient());
-                } else {
-                    outputs.add(itemStackIGuiIngredient.getDisplayedIngredient());
+                final ItemStack displayedIngredient = itemStackIGuiIngredient.getDisplayedIngredient();
+                if (displayedIngredient != null) {
+                    if (itemStackIGuiIngredient.isInput()) {
+                        ingredients.add(displayedIngredient);
+                    } else {
+                        outputs.add(displayedIngredient);
+                    }
                 }
             }
 
