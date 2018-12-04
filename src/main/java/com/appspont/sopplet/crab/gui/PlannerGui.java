@@ -7,14 +7,8 @@ import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import mezz.jei.api.IRecipeRegistry;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IIngredientRenderer;
-import mezz.jei.api.recipe.IFocus;
-import mezz.jei.api.recipe.IRecipeCategory;
-import mezz.jei.api.recipe.IRecipeWrapper;
-import mezz.jei.ingredients.Ingredients;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -35,14 +29,11 @@ import java.util.List;
 public class PlannerGui extends GuiContainer implements PlannerContainerListener {
 
     private final IngredientRenderer ingredientRenderer;
-    private final RecipeSelectorGui recipeSelectorGui = new RecipeSelectorGui();
     private final PlannerContainer plannerContainer;
     private final Goals goals;
     private final WidgetContainer<RectangleWidget> widgetWidgetContainer;
     private final int backgroundColor;
     private final DrawContext drawContext;
-    private Tooltip tooltip = null;
-    private boolean tooltipInvoked = false;
     private final CraftingStepsWidget craftingSteps;
     private final RequiredItemsWidget requiredItems;
     private final IIngredientRegistry ingredientRegistry;
@@ -90,8 +81,6 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
         drawContext.partialTicks = partialTicks;
         drawContext.hoverStack = null;
 
-        tooltipInvoked = tooltip != null && tooltip.isHover(mouseX, mouseY) && !tooltip.isRemoved();
-
         this.drawDefaultBackground();
 
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -109,16 +98,6 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
             GuiUtils.drawHoveringText(tooltip, mouseX, mouseY, 600, 400, -1, fontRenderer);
         }
 
-        if (recipeSelectorGui.isFocused()) {
-            recipeSelectorGui.drawScreen(mouseX, mouseY, partialTicks);
-        }
-
-
-        if (tooltipInvoked) {
-            tooltip.draw(mouseX, mouseY);
-        } else {
-            tooltip = null;
-        }
     }
 
     @Override
@@ -137,10 +116,6 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
         this.guiTop = 0;
         this.ySize = this.height;
         this.xSize = this.width - 100;
-//        this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 2 - 24, "This is button a"));
-//        this.buttonList.add(new GuiButton(1, this.width / 2 - 100, this.height / 2 + 4, "This is button b"));
-        recipeSelectorGui.width = 100;
-        recipeSelectorGui.height = 100;
         craftingSteps.setDimensions(xSize, 150, 100, 250);
         goals.setDimensions(xSize / 2, 100, 2, 96);
 
@@ -212,37 +187,14 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
     }
 
     @Override
-    protected void mouseClicked(int x, int y, int button) throws IOException {
-        if (tooltip != null) {
-            tooltip.handleClick(x, y, button);
-        }
-
+    protected void mouseClicked(int x, int y, int button) {
         if (widgetWidgetContainer.contains(x, y)) {
             widgetWidgetContainer.mouseClicked(x, y, button);
         }
-//        recipeSelectorGui.setFocused(true);
     }
 
     @Override
     protected void keyTyped(char key, int eventKey) throws IOException {
         super.keyTyped(key, eventKey);
-    }
-
-    private List<Ingredients> getStackIngredients(ItemStack stack) {
-
-        final List<Ingredients> ingredientList = Lists.newArrayList();
-        final IRecipeRegistry recipeRegistry = CrabJeiPlugin.getJeiRuntime().getRecipeRegistry();
-        final List<IRecipeCategory> recipeCategories = recipeRegistry.getRecipeCategories();
-        for (IRecipeCategory recipeCategory : recipeCategories) {
-            final List<IRecipeWrapper> recipeWrappers =
-                    recipeRegistry.getRecipeWrappers(recipeCategory, recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack));
-            for (IRecipeWrapper recipeWrapper : recipeWrappers) {
-                Ingredients ingredients = new Ingredients();
-                recipeWrapper.getIngredients(ingredients);
-                ingredientList.add(ingredients);
-            }
-        }
-
-        return ingredientList;
     }
 }
