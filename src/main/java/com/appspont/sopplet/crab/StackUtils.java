@@ -7,9 +7,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class StackUtils {
 
@@ -68,6 +70,5 @@ public class StackUtils {
         final String fluidName = fluidStack.getFluid().getName();
         return "fl:" + fluidName;
     }
-
 
 }
