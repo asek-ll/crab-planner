@@ -3,6 +3,7 @@ package com.appspont.sopplet.crab.gui.planner;
 import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
+import org.lwjgl.input.Mouse;
 
 import java.util.List;
 
@@ -22,8 +23,6 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
 
     @Override
     protected void elementClicked(int index, boolean selected, int mouseX, int mouseY) {
-        final Widget goal = childWidgets.get(index);
-        goal.mouseClicked(mouseX, mouseY, 0);
     }
 
     @Override
@@ -68,5 +67,43 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
     @Override
     public boolean mouseClicked(int x, int y, int button) {
         return false;
+    }
+
+    @Override
+    public void handleMouseInput() {
+        if (this.isMouseYWithinSlotBounds(this.mouseY)) {
+            int i2;
+            int j2;
+            int k2;
+            int l2;
+            if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState() && this.mouseY >= this.top && this.mouseY <= this.bottom) {
+                i2 = left + (this.width - this.getListWidth()) / 2;
+                j2 = left + (this.width + this.getListWidth()) / 2;
+                k2 = this.mouseY - this.top - this.headerPadding + (int) this.amountScrolled - 4;
+                l2 = k2 / this.slotHeight;
+                if (l2 < this.getSize() && this.mouseX >= i2 && this.mouseX <= j2 && l2 >= 0 && k2 >= 0) {
+                    this.selectedElement = l2;
+
+                    final Widget goal = childWidgets.get(l2);
+                    if (goal.mouseClicked(mouseX, mouseY, 0)) {
+                        return;
+                    }
+
+                } else if (this.mouseX >= i2 && this.mouseX <= j2 && k2 < 0) {
+                    this.clickedHeader(this.mouseX - i2, this.mouseY - this.top + (int) this.amountScrolled - 4);
+                }
+            }
+        }
+
+        super.handleMouseInput();
+    }
+
+    @Override
+    public void setDimensions(int width, int height, int top, int bottom) {
+        super.setDimensions(width, height, top, bottom);
+        for (int i = 0; i < childWidgets.size(); i++) {
+            final T t = childWidgets.get(i);
+            t.width = width;
+        }
     }
 }

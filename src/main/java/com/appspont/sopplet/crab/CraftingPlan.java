@@ -1,37 +1,32 @@
 package com.appspont.sopplet.crab;
 
-import com.appspont.sopplet.crab.gui.planner.PlannerContainerListener;
+import com.appspont.sopplet.crab.gui.planner.CraftingPlanListeners;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredient;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
+import com.google.gson.*;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class PlannerContainer extends Container {
+public class CraftingPlan {
+    private String name = "Plan";
     private final List<PlannerGoal> goals = Lists.newArrayList();
     private final List<CraftingRecipe> recipes = Lists.newArrayList();
-    private final List<PlannerContainerListener> listeners = Lists.newArrayList();
-
     private final List<PlannerIngredientStack> required = Lists.newArrayList();
 
-    @Override
-    public boolean canInteractWith(EntityPlayer entityPlayer) {
-        return false;
-    }
+    private final List<CraftingPlanListeners> listeners = Lists.newArrayList();
 
-    public void addGoal(ItemStack stack) {
-        goals.add(new PlannerGoal(new PlannerItemStack(stack), this));
+    public void addGoal(PlannerIngredientStack stack) {
+        goals.add(new PlannerGoal(stack, this));
         updateGoals();
         recalc();
     }
@@ -50,11 +45,12 @@ public class PlannerContainer extends Container {
         return recipes;
     }
 
-    private void invokeListener(Consumer<PlannerContainerListener> action) {
+    private void invokeListener(Consumer<CraftingPlanListeners> action) {
         listeners.forEach(action);
     }
 
-    public void addListener(PlannerContainerListener listener) {
+    public void addListener(CraftingPlanListeners listener) {
+        listeners.clear();
         listeners.add(listener);
     }
 
@@ -152,7 +148,7 @@ public class PlannerContainer extends Container {
     }
 
     private void updateGoals() {
-        for (PlannerContainerListener listener : listeners) {
+        for (CraftingPlanListeners listener : listeners) {
             listener.updateGoals(goals);
         }
     }
@@ -168,8 +164,72 @@ public class PlannerContainer extends Container {
         }
     }
 
+    public List<PlannerIngredientStack> getRequired() {
+        return required;
+    }
 
     public void save() {
 
+    }
+
+    public void removeListener(CraftingPlanListeners listener) {
+        listeners.remove(listener);
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public static class JsonHelper implements JsonSerializer<CraftingPlan>, JsonDeserializer<CraftingPlan> {
+
+        @Override
+        public CraftingPlan deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            final JsonObject jsonObject = json.getAsJsonObject();
+            final CraftingPlan craftingPlan = new CraftingPlan();
+
+            final JsonArray goalElements = jsonObject.getAsJsonArray("goals");
+            final ArrayList<PlannerGoal> goals = new ArrayList<>(goalElements.size());
+
+            for (JsonElement goalsElement : goalElements) {
+                final PlannerIngredientStack stack = context.deserialize(goalsElement.getAsJsonObject().get("stack"), PlannerIngredientStack.class);
+                goals.add(new PlannerGoal(stack, craftingPlan));
+            }
+
+            craftingPlan.goals.addAll(goals);
+
+            final JsonArray recipeElements = jsonObject.getAsJsonArray("recipes");
+            final ArrayList<CraftingRecipe> recipes = new ArrayList<>(recipeElements.size());
+
+            for (JsonElement recipeElement : recipeElements) {
+                final JsonObject recipeObject = recipeElement.getAsJsonObject();
+                final PlannerRecipe recipe = context.deserialize(recipeObject.get("recipe"), PlannerRecipe.class);
+                final int count = recipeObject.get("count").getAsInt();
+
+                final CraftingRecipe craftingRecipe = new CraftingRecipe(recipe, craftingPlan);
+                craftingRecipe.setCount(count);
+                recipes.add(craftingRecipe);
+            }
+
+            craftingPlan.recipes.addAll(recipes);
+
+            final List<PlannerIngredientStack> required = StackUtils.fromJsonArray(jsonObject.getAsJsonArray("required"), PlannerIngredientStack.class, context);
+
+            craftingPlan.required.addAll(required);
+
+            return craftingPlan;
+        }
+
+        @Override
+        public JsonElement serialize(CraftingPlan src, Type typeOfSrc, JsonSerializationContext context) {
+            final JsonObject jsonObject = new JsonObject();
+            jsonObject.add("goals", StackUtils.toJsonArray(src.goals, PlannerGoal.class, context));
+            jsonObject.add("recipes", StackUtils.toJsonArray(src.recipes, CraftingRecipe.class, context));
+            jsonObject.add("required", StackUtils.toJsonArray(src.required, PlannerIngredientStack.class, context));
+            return jsonObject;
+        }
     }
 }

@@ -23,16 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class PlannerContainerTransferHandler implements IRecipeTransferHandler<PlannerContainer> {
+public class PlannerContainerTransferHandler implements IRecipeTransferHandler<CraftingPlanContainer> {
     @Override
     @Nonnull
-    public Class<PlannerContainer> getContainerClass() {
-        return PlannerContainer.class;
+    public Class<CraftingPlanContainer> getContainerClass() {
+        return CraftingPlanContainer.class;
     }
 
     @Nullable
     @Override
-    public IRecipeTransferError transferRecipe(@Nonnull PlannerContainer container,
+    public IRecipeTransferError transferRecipe(@Nonnull CraftingPlanContainer container,
                                                @Nonnull IRecipeLayout iRecipeLayout,
                                                @Nonnull EntityPlayer entityPlayer, boolean maxTransfer, boolean doTransfer) {
 
@@ -72,7 +72,7 @@ public class PlannerContainerTransferHandler implements IRecipeTransferHandler<P
             }
 
 
-            container.addRecipe(compactItems(outputs), compactItems(ingredients));
+            container.getPlan().addRecipe(compactItems(outputs), compactItems(ingredients));
         }
 
         return null;

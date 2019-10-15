@@ -1,17 +1,21 @@
 package com.appspont.sopplet.crab;
 
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class StackUtils {
 
@@ -71,4 +75,23 @@ public class StackUtils {
         return "fl:" + fluidName;
     }
 
+
+    public static <T> JsonArray toJsonArray(Iterable<T> items, Class<T> type, JsonSerializationContext context) {
+        final JsonArray jsonElements = new JsonArray();
+        for (T item : items) {
+            jsonElements.add(context.serialize(item, type));
+        }
+        return jsonElements;
+    }
+
+    public static <T> List<T> fromJsonArray(JsonArray array, Class<T> type, JsonDeserializationContext context) {
+        final ArrayList<T> result = new ArrayList<>(array.size());
+        for (JsonElement jsonElement : array) {
+            final T deserialize = context.deserialize(jsonElement, type);
+            if (deserialize != null) {
+                result.add(deserialize);
+            }
+        }
+        return result;
+    }
 }

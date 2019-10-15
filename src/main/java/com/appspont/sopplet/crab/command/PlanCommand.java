@@ -1,7 +1,9 @@
 package com.appspont.sopplet.crab.command;
 
-import com.appspont.sopplet.crab.PlannerContainer;
+import com.appspont.sopplet.crab.CraftingPlan;
+import com.appspont.sopplet.crab.PlanStoreManager;
 import com.appspont.sopplet.crab.gui.PlannerGui;
+import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandException;
@@ -40,7 +42,8 @@ public class PlanCommand implements ICommand {
     public void execute(MinecraftServer minecraftServer, ICommandSender iCommandSender, String[] strings) throws CommandException {
         final Entity commandSenderEntity = iCommandSender.getCommandSenderEntity();
         if (commandSenderEntity instanceof EntityPlayer) {
-            final PlannerGui plannerGui = new PlannerGui(new PlannerContainer());
+            final CraftingPlan currentPlan = CrabJeiPlugin.getPlanStoreManager().getCurrentPlan();
+            final PlannerGui plannerGui = new PlannerGui(currentPlan);
             Minecraft.getMinecraft().displayGuiScreen(plannerGui);
         }
         iCommandSender.sendMessage(new TextComponentString("Planner start"));

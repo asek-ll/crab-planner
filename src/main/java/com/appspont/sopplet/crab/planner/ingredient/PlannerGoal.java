@@ -1,12 +1,16 @@
 package com.appspont.sopplet.crab.planner.ingredient;
 
-import com.appspont.sopplet.crab.PlannerContainer;
+import com.appspont.sopplet.crab.CraftingPlan;
+import com.appspont.sopplet.crab.JsonAware;
+import com.google.gson.*;
+
+import java.lang.reflect.Type;
 
 public class PlannerGoal {
     private final PlannerIngredientStack stack;
-    private final PlannerContainer parent;
+    private final CraftingPlan parent;
 
-    public PlannerGoal(PlannerIngredientStack stack, PlannerContainer parent) {
+    public PlannerGoal(PlannerIngredientStack stack, CraftingPlan parent) {
         this.stack = stack;
         this.parent = parent;
     }
@@ -32,6 +36,16 @@ public class PlannerGoal {
     public void setAmount(int amount) {
         if (amount > 0) {
             parent.setGoalAmount(this, amount);
+        }
+    }
+
+    public static class JsonHelper implements JsonSerializer<PlannerGoal> {
+
+        @Override
+        public JsonElement serialize(PlannerGoal src, Type typeOfSrc, JsonSerializationContext context) {
+            final JsonObject jsonObject = new JsonObject();
+            jsonObject.add("stack", context.serialize(src.stack, PlannerIngredientStack.class));
+            return jsonObject;
         }
     }
 }

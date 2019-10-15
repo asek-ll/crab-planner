@@ -1,20 +1,35 @@
 package com.appspont.sopplet.crab.gui;
 
+import com.appspont.sopplet.crab.CraftingPlan;
+import com.appspont.sopplet.crab.CraftingPlanContainer;
 import com.appspont.sopplet.crab.CraftingRecipe;
-import com.appspont.sopplet.crab.PlannerContainer;
-import com.appspont.sopplet.crab.gui.planner.*;
+import com.appspont.sopplet.crab.PlanStoreManager;
+import com.appspont.sopplet.crab.gui.planner.CraftingPlanListeners;
+import com.appspont.sopplet.crab.gui.planner.CraftingStepsWidget;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
+import com.appspont.sopplet.crab.gui.planner.Goals;
+import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
+import com.appspont.sopplet.crab.gui.planner.PlanItemsWidget;
+import com.appspont.sopplet.crab.gui.planner.RectangleWidget;
+import com.appspont.sopplet.crab.gui.planner.RequiredItemsWidget;
+import com.appspont.sopplet.crab.gui.planner.WidgetContainer;
+import com.appspont.sopplet.crab.planner.ingredient.PlannerFluidStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
+import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -26,17 +41,20 @@ import java.io.IOException;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
-public class PlannerGui extends GuiContainer implements PlannerContainerListener {
+public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
-    private final IngredientRenderer ingredientRenderer;
-    private final PlannerContainer plannerContainer;
+    private CraftingPlan plan;
     private final Goals goals;
     private final WidgetContainer<RectangleWidget> widgetWidgetContainer;
     private final int backgroundColor;
     private final DrawContext drawContext;
     private final CraftingStepsWidget craftingSteps;
     private final RequiredItemsWidget requiredItems;
+    private final PlanItemsWidget planItems;
     private final IIngredientRegistry ingredientRegistry;
+    private final GuiTextField fileNameTextField;
+    private final GuiButton saveGuiButton;
+    private final PlanStoreManager planStoreManager;
 
     @Override
     public void updateCraftingSteps(List<CraftingRecipe> recipes) {
@@ -53,25 +71,33 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
         goals.setGoals(plannerGoals);
     }
 
+    private void updatePlanItems() {
+        planItems.setNames(planStoreManager.getPlanNames());
+    }
 
-    public PlannerGui(PlannerContainer plannerContainer) {
-        super(plannerContainer);
+    public PlannerGui(CraftingPlan plan) {
+        super(new CraftingPlanContainer(plan));
         mc = Minecraft.getMinecraft();
+        planStoreManager = CrabJeiPlugin.getPlanStoreManager();
         backgroundColor = new Color(0, 0, 0, 128).getRGB();
         ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
 //                ingredientRegistry.getIngredientRenderer(ItemStack.class);
-        ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
-        this.plannerContainer = plannerContainer;
+        IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
 
-        plannerContainer.addListener(this);
         requiredItems = new RequiredItemsWidget(ingredientRenderer);
         craftingSteps = new CraftingStepsWidget(ingredientRenderer, mc);
         goals = new Goals(mc, ingredientRenderer);
+        planItems = new PlanItemsWidget(mc, this);
         widgetWidgetContainer = new WidgetContainer<>(ImmutableList.of(
                 requiredItems
         ));
 
         drawContext = new DrawContext();
+
+        fileNameTextField = new GuiTextField(0, mc.fontRenderer, 1, 0, 18, 18);
+
+        saveGuiButton = new GuiButton(1, 0, 0, 70 - 8, 20, "Save");
+        setPlan(plan);
     }
 
     @Override
@@ -98,16 +124,14 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
             GuiUtils.drawHoveringText(tooltip, mouseX, mouseY, 600, 400, -1, fontRenderer);
         }
 
+        fileNameTextField.drawTextBox();
+        saveGuiButton.drawButton(mc, mouseX, mouseY, partialTicks);
+        planItems.draw(drawContext);
     }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float ticks, int x, int y) {
         drawRect(guiLeft, guiTop, xSize, ySize, backgroundColor);
-//        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-//        this.mc.getTextureManager().bindTexture(new ResourceLocation("textures/gui/container/crafting_table.png"));
-//        int i = (this.wQAQAidth - this.xSize) / 2;
-//        int j = (this.height - this.ySize) / 2;
-//        this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
     }
 
     @Override
@@ -121,36 +145,35 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
 
         requiredItems.setBounds(0, 250, xSize, 150);
 
+        planItems.setDimensions(xSize / 2, 80, 22, 96);
+        planItems.left = xSize / 2;
+        planItems.right = xSize;
+
         widgetWidgetContainer.updateBounds();
+
+        fileNameTextField.x = xSize / 2;
+        fileNameTextField.width = xSize / 2 - 70;
+
+        saveGuiButton.x = xSize - 70;
     }
 
     private boolean interceptMouseClick() {
-        int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
-        int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-
-
         if (Mouse.getEventButton() > -1) {
             if (Mouse.getEventButtonState()) {
-                final ItemStack stackUnderMouse = CrabJeiPlugin.getJeiRuntime().getItemListOverlay().getStackUnderMouse();
-                if (stackUnderMouse != null) {
-//
-//                    final IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
-//
-//                    final IIngredientRenderer<ItemStack> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ItemStack.class);
-//
-//                    mc.getRenderItem().renderItemAndEffectIntoGUI(null, stackUnderMouse, this.width / 2, this.height / 2);
-//                    ingredientRenderer.render(mc, this.width / 2, this.height / 2, stackUnderMouse);
-//
-//                    final GuiIngredientFast guiIngredientFast = new GuiIngredientFast(20, 20, 5);
-//
-//                    guiIngredientFast.setIngredient(stackUnderMouse);
-//
-//                    guiIngredientFast.renderItemAndEffectIntoGUI();
+                final Object ingredientUnderMouse =
+                        CrabJeiPlugin.getJeiRuntime().getIngredientListOverlay().getIngredientUnderMouse();
 
-//                    stacks.add(new Goal(stackUnderMouse));
-                    plannerContainer.addGoal(stackUnderMouse);
-
-                    return true;
+                if (ingredientUnderMouse != null) {
+                    PlannerIngredientStack stack = null;
+                    if (ingredientUnderMouse instanceof ItemStack) {
+                        stack = new PlannerItemStack((ItemStack) ingredientUnderMouse);
+                    } else if (ingredientUnderMouse instanceof FluidStack) {
+                        stack = new PlannerFluidStack((FluidStack) ingredientUnderMouse);
+                    }
+                    if (stack != null) {
+                        plan.addGoal(stack);
+                        return true;
+                    }
                 }
             }
         }
@@ -171,6 +194,7 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
                 }
                 goals.handleMouseInput();
                 craftingSteps.handleMouseInput();
+                planItems.handleMouseInput();
             }
         }
 
@@ -191,10 +215,63 @@ public class PlannerGui extends GuiContainer implements PlannerContainerListener
         if (widgetWidgetContainer.contains(x, y)) {
             widgetWidgetContainer.mouseClicked(x, y, button);
         }
+        fileNameTextField.mouseClicked(x, y, button);
+        if (saveGuiButton.isMouseOver()) {
+            savePlan();
+        }
+    }
+
+    private void savePlan() {
+        try {
+            planStoreManager.savePlan(plan);
+            updatePlanItems();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setPlan(CraftingPlan plan) {
+        if (this.plan != null) {
+            this.plan.removeListener(this);
+        }
+        this.plan = plan;
+        ((CraftingPlanContainer) inventorySlots).setPlan(plan);
+        plan.addListener(this);
+
+        updateGoals(plan.getGoals());
+        updateCraftingSteps(plan.getRecipes());
+        updateRequired(plan.getRequired());
+        updatePlanItems();
+
+        fileNameTextField.setText(plan.getName());
     }
 
     @Override
     protected void keyTyped(char key, int eventKey) throws IOException {
+
+        if (fileNameTextField.textboxKeyTyped(key, eventKey)) {
+            plan.setName(fileNameTextField.getText());
+            return;
+        }
+
+//        if (stack.guiTextField.isFocused()) {
+//
+//            final char c = Character.toUpperCase(key);
+//            if (c < 32 || (c >= '0' && c <= '9')) {
+//                stack.guiTextField.textboxKeyTyped(key, eventKey);
+//                try {
+//                    final int i = Integer.parseInt(stack.guiTextField.getText());
+//                    stack.stack.setCount(i);
+//                } catch (NumberFormatException ignored) {
+//                }
+//            }
+//        }
         super.keyTyped(key, eventKey);
     }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+    }
+
 }

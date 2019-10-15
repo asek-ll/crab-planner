@@ -6,7 +6,7 @@ import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 
 import java.util.List;
 
-public interface PlannerContainerListener {
+public interface CraftingPlanListeners {
     void updateCraftingSteps(List<CraftingRecipe> recipes);
 
     void updateRequired(List<PlannerIngredientStack> stacks);
