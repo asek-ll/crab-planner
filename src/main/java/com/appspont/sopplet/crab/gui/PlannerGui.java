@@ -140,12 +140,12 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         this.guiTop = 0;
         this.ySize = this.height;
         this.xSize = this.width - 100;
-        craftingSteps.setDimensions(xSize, 150, 100, 250);
-        goals.setDimensions(xSize / 2, 100, 2, 96);
+        craftingSteps.setDimensions(xSize, 160, 86, 250);
+        goals.setDimensions(xSize / 2, 80, 0, 84);
 
         requiredItems.setBounds(0, 250, xSize, 150);
 
-        planItems.setDimensions(xSize / 2, 80, 22, 96);
+        planItems.setDimensions(xSize / 2, 60, 20, 84);
         planItems.left = xSize / 2;
         planItems.right = xSize;
 
@@ -244,6 +244,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         updatePlanItems();
 
         fileNameTextField.setText(plan.getName());
+        fileNameTextField.setCursorPositionZero();
     }
 
     @Override

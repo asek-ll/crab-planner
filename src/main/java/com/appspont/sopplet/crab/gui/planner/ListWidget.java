@@ -3,6 +3,7 @@ package com.appspont.sopplet.crab.gui.planner;
 import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
+import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Mouse;
 
 import java.util.List;
@@ -23,6 +24,8 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
 
     @Override
     protected void elementClicked(int index, boolean selected, int mouseX, int mouseY) {
+        final Widget goal = childWidgets.get(index);
+        goal.mouseClicked(mouseX, mouseY, 0);
     }
 
     @Override
@@ -37,7 +40,7 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
 
     @Override
     protected void drawSlot(int index, int x, int y, int height, int mouseX, int mouseY, float partialTicks) {
-        if (y + 18 > this.top && y < this.bottom) {
+        if (y + (slotHeight-4) > this.top && y < this.bottom) {
             final RectangleWidget goal = childWidgets.get(index);
             goal.setLocation(x, y);
             goal.draw(context);
@@ -46,7 +49,7 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
 
     @Override
     protected int getScrollBarX() {
-        return this.width - 4;
+        return this.left + this.width - 6;
     }
 
     @Override
@@ -72,30 +75,103 @@ public class ListWidget<T extends RectangleWidget> extends GuiSlot implements Wi
     @Override
     public void handleMouseInput() {
         if (this.isMouseYWithinSlotBounds(this.mouseY)) {
-            int i2;
-            int j2;
-            int k2;
-            int l2;
             if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState() && this.mouseY >= this.top && this.mouseY <= this.bottom) {
-                i2 = left + (this.width - this.getListWidth()) / 2;
-                j2 = left + (this.width + this.getListWidth()) / 2;
-                k2 = this.mouseY - this.top - this.headerPadding + (int) this.amountScrolled - 4;
-                l2 = k2 / this.slotHeight;
-                if (l2 < this.getSize() && this.mouseX >= i2 && this.mouseX <= j2 && l2 >= 0 && k2 >= 0) {
-                    this.selectedElement = l2;
+                int leftCorner = left + (this.width - this.getListWidth()) / 2;
+                int rightCorner = left + (this.width + this.getListWidth()) / 2;
+                int relativeMouseY = this.mouseY - this.top - this.headerPadding + (int) this.amountScrolled - 4;
+                int relativeMouseItemIndex = relativeMouseY / this.slotHeight;
 
-                    final Widget goal = childWidgets.get(l2);
-                    if (goal.mouseClicked(mouseX, mouseY, 0)) {
-                        return;
-                    }
+                if (relativeMouseItemIndex < this.getSize()
+                        && relativeMouseItemIndex >= 0
+                        && this.mouseX >= leftCorner
+                        && this.mouseX <= rightCorner) {
 
-                } else if (this.mouseX >= i2 && this.mouseX <= j2 && k2 < 0) {
-                    this.clickedHeader(this.mouseX - i2, this.mouseY - this.top + (int) this.amountScrolled - 4);
+                    this.selectedElement = relativeMouseItemIndex;
+
+                    this.elementClicked(relativeMouseItemIndex, false, this.mouseX, this.mouseY);
+
+                } else if (this.mouseX >= leftCorner && this.mouseX <= rightCorner && relativeMouseY < 0) {
+                    this.clickedHeader(this.mouseX - leftCorner, this.mouseY - this.top + (int) this.amountScrolled - 4);
                 }
             }
+
+            if (Mouse.isButtonDown(0) && this.getEnabled()) {
+                if (this.initialClickY != -1) {
+                    if (this.initialClickY >= 0) {
+                        int diff = (int)((this.mouseY - this.initialClickY) * this.scrollMultiplier / slotHeight);
+
+                        if (diff != 0) {
+                            this.amountScrolled -= diff * slotHeight;
+                            this.initialClickY = this.mouseY;
+                        }
+                    }
+                } else {
+                    boolean flag1 = true;
+                    if (this.mouseY >= this.top && this.mouseY <= this.bottom) {
+                        int listOffset = (this.width - this.getListWidth()) / 2;
+                        int listWidth = (this.width + this.getListWidth()) / 2;
+                        int relativeMouseY = this.mouseY - this.top - this.headerPadding + (int) this.amountScrolled - 4;
+
+                        int relativeMouseItemIndex = relativeMouseY / this.slotHeight;
+
+                        if (relativeMouseItemIndex < this.getSize()
+                                && relativeMouseItemIndex >= 0
+                                && this.mouseX >= listOffset
+                                && this.mouseX <= listWidth
+                        ) {
+                            boolean flag = relativeMouseItemIndex == this.selectedElement && Minecraft.getSystemTime() - this.lastClicked < 250L;
+                            this.elementClicked(relativeMouseItemIndex, flag, this.mouseX, this.mouseY);
+                            this.selectedElement = relativeMouseItemIndex;
+                            this.lastClicked = Minecraft.getSystemTime();
+                        } else if (this.mouseX >= listOffset && this.mouseX <= listWidth && relativeMouseY < 0) {
+                            this.clickedHeader(this.mouseX - listOffset, this.mouseY - this.top + (int) this.amountScrolled - 4);
+                            flag1 = false;
+                        }
+
+                        int scrollBarLeft = this.getScrollBarX();
+                        int scrollBarRight = scrollBarLeft + 6;
+
+                        if (this.mouseX >= scrollBarLeft && this.mouseX <= scrollBarRight) {
+                            this.scrollMultiplier = -1.0F;
+                            int maxScroll = this.getMaxScroll();
+                            if (maxScroll < 1) {
+                                maxScroll = 1;
+                            }
+
+                            int l1 = (int) ((float) ((this.bottom - this.top) * (this.bottom - this.top)) / (float) this.getContentHeight());
+                            l1 = MathHelper.clamp(l1, 32, this.bottom - this.top - 8);
+                            this.scrollMultiplier /= (float) (this.bottom - this.top - l1) / (float) maxScroll;
+                        } else {
+                            this.scrollMultiplier = 1.0F;
+                        }
+
+                        if (flag1) {
+                            this.initialClickY = this.mouseY;
+                        } else {
+                            this.initialClickY = -2;
+                        }
+                    } else {
+                        this.initialClickY = -2;
+                    }
+                }
+            } else {
+                this.initialClickY = -1;
+            }
+
+            int leftCorner = Mouse.getEventDWheel();
+            if (leftCorner != 0) {
+                if (leftCorner > 0) {
+                    leftCorner = -1;
+                } else if (leftCorner < 0) {
+                    leftCorner = 1;
+                }
+
+                this.amountScrolled += (float) (leftCorner * this.slotHeight);
+            }
+
         }
 
-        super.handleMouseInput();
+//        super.handleMouseInput();
     }
 
     @Override

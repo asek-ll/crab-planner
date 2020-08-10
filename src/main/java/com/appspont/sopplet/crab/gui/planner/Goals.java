@@ -10,7 +10,7 @@ public class Goals extends ListWidget<GoalWidget> {
     private final IngredientRenderer ingredientRenderer;
 
     public Goals(Minecraft mc, IngredientRenderer ingredientRenderer) {
-        super(mc, 124, 96, 2, 100, 20);
+        super(mc, 124, 80, 0, 100, 20);
         this.ingredientRenderer = ingredientRenderer;
     }
 
