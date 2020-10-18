@@ -1,29 +1,48 @@
 package com.appspont.sopplet.crab;
 
+import com.appspont.sopplet.crab.gui.RecipeGui;
+import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerFluidStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredient;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
+import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
+import mezz.jei.api.IRecipeRegistry;
+import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiIngredient;
 import mezz.jei.api.gui.IGuiItemStackGroup;
 import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+import mezz.jei.gui.elements.DrawableIngredient;
+import mezz.jei.gui.recipes.RecipesGui;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PlannerContainerTransferHandler implements IRecipeTransferHandler<CraftingPlanContainer> {
+
+    private RecipeGui recipeGui;
+    private final Minecraft mc;
+
+    public PlannerContainerTransferHandler() {
+        mc = Minecraft.getMinecraft();
+    }
+
     @Override
     @Nonnull
     public Class<CraftingPlanContainer> getContainerClass() {
@@ -70,9 +89,29 @@ public class PlannerContainerTransferHandler implements IRecipeTransferHandler<C
                     }
                 }
             }
+            IRecipeRegistry recipeRegistry = CrabJeiPlugin.getJeiRuntime().getRecipeRegistry();
+            List<Object> recipeCatalysts = recipeRegistry.getRecipeCatalysts(iRecipeLayout.getRecipeCategory());
+            List<PlannerIngredientStack> catalysts = new ArrayList<>();
+
+            for (Object recipeCatalyst : recipeCatalysts) {
+                if (recipeCatalyst instanceof ItemStack) {
+                    catalysts.add(new PlannerItemStack((ItemStack) recipeCatalyst));
+                    break;
+                }
+            }
 
 
-            container.getPlan().addRecipe(compactItems(outputs), compactItems(ingredients));
+            RecipeGui recipeGui = getRecipeGui();
+
+            if (mc.currentScreen instanceof RecipesGui) {
+                recipeGui.setParentScreen(((RecipesGui) mc.currentScreen).getParentScreen());
+            }
+
+            recipeGui.setRecipe(iRecipeLayout);
+            recipeGui.setPlan(container.getPlan());
+            mc.displayGuiScreen(recipeGui);
+//            PlannerRecipe plannerRecipe = new PlannerRecipe(compactItems(outputs), compactItems(ingredients), catalysts);
+//            container.getPlan().addRecipe(plannerRecipe);
         }
 
         return null;
@@ -87,5 +126,13 @@ public class PlannerContainerTransferHandler implements IRecipeTransferHandler<C
         return compacted.entrySet().stream()
                 .map(e -> e.getElement().createStack(e.getCount()))
                 .collect(Collectors.toList());
+    }
+
+    private RecipeGui getRecipeGui() {
+        if (recipeGui == null)  {
+            IIngredientRegistry ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
+            recipeGui = new RecipeGui(ingredientRegistry, mc);
+        }
+        return recipeGui;
     }
 }

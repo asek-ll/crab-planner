@@ -17,18 +17,19 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public abstract class PlannerIngredientStack {
-    protected final PlannerIngredient ingredient;
+    protected final PlannerIngredient<?> ingredient;
 
-    protected PlannerIngredientStack(PlannerIngredient ingredient) {
+    protected PlannerIngredientStack(PlannerIngredient<?> ingredient) {
         this.ingredient = ingredient;
     }
 
-    public PlannerIngredient getIngredient() {
+    public PlannerIngredient<?> getIngredient() {
         return ingredient;
     }
 
     public abstract int getAmount();
 
+    public abstract void setAmount(int amount);
 
     public static class JsonHelper implements JsonSerializer<PlannerIngredientStack>, JsonDeserializer<PlannerIngredientStack> {
 
@@ -48,7 +49,7 @@ public abstract class PlannerIngredientStack {
                     }
                 });
 
-        private PlannerIngredient getByUid(String uid) {
+        private PlannerIngredient<?> getByUid(String uid) {
             try {
                 final ItemStack stack = (ItemStack) uidCacheByType.get(ItemStack.class).get(uid);
                 if (stack != null) {
@@ -71,7 +72,7 @@ public abstract class PlannerIngredientStack {
             final JsonObject jsonObject = json.getAsJsonObject();
             final String uid = jsonObject.get("uid").getAsString();
 
-            final PlannerIngredient ingredient = getByUid(uid);
+            final PlannerIngredient<?> ingredient = getByUid(uid);
             if (ingredient == null) {
                 return null;
             }

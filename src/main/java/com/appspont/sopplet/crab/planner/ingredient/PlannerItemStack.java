@@ -40,4 +40,9 @@ public class PlannerItemStack extends PlannerIngredientStack {
     public int getAmount() {
         return itemStack.getCount();
     }
+
+    @Override
+    public void setAmount(int amount) {
+        itemStack.setCount(amount);
+    }
 }

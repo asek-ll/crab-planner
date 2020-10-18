@@ -47,6 +47,8 @@ public class PlanItemWidget extends RectangleWidget {
             parent.setPlan(plan);
             return true;
         }
+        if (removeButton.isMouseOver()) {
+        }
         return false;
     }
 }

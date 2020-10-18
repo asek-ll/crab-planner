@@ -16,7 +16,7 @@ public class PlannerFluidStack extends PlannerIngredientStack {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return fluidStack.isFluidStackIdentical((FluidStack) o);
+        return fluidStack.isFluidStackIdentical(((PlannerFluidStack) o).fluidStack);
     }
 
     @Override
@@ -27,5 +27,10 @@ public class PlannerFluidStack extends PlannerIngredientStack {
     @Override
     public int getAmount() {
         return fluidStack.amount;
+    }
+
+    @Override
+    public void setAmount(int amount) {
+        fluidStack.amount = amount;
     }
 }

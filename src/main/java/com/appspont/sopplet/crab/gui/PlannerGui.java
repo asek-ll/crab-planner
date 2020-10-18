@@ -24,6 +24,7 @@ import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.util.ITooltipFlag;
@@ -81,7 +82,6 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         planStoreManager = CrabJeiPlugin.getPlanStoreManager();
         backgroundColor = new Color(0, 0, 0, 128).getRGB();
         ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
-//                ingredientRegistry.getIngredientRenderer(ItemStack.class);
         IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
 
         requiredItems = new RequiredItemsWidget(ingredientRenderer);
@@ -136,25 +136,27 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
     @Override
     public void initGui() {
-        this.guiLeft = 0;
+        this.guiLeft = 100;
         this.guiTop = 0;
         this.ySize = this.height;
-        this.xSize = this.width - 100;
+        this.xSize = this.width - 200;
         craftingSteps.setDimensions(xSize, 160, 86, 250);
+        craftingSteps.left = guiLeft;
         goals.setDimensions(xSize / 2, 80, 0, 84);
+        goals.left=guiLeft;
 
-        requiredItems.setBounds(0, 250, xSize, 150);
+        requiredItems.setBounds(guiLeft, 250, xSize, 150);
 
         planItems.setDimensions(xSize / 2, 60, 20, 84);
-        planItems.left = xSize / 2;
-        planItems.right = xSize;
+        planItems.left = guiLeft + xSize / 2;
+        planItems.right = guiLeft + xSize;
 
         widgetWidgetContainer.updateBounds();
 
-        fileNameTextField.x = xSize / 2;
+        fileNameTextField.x = guiLeft + xSize / 2;
         fileNameTextField.width = xSize / 2 - 70;
 
-        saveGuiButton.x = xSize - 70;
+        saveGuiButton.x = guiLeft + xSize - 70;
     }
 
     private boolean interceptMouseClick() {

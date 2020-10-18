@@ -37,6 +37,15 @@ public class CraftStepWidget extends RectangleWidget {
             x += 18;
         }
         x += 18;
+
+        if (!recipe.getRecipe().getCatalysts().isEmpty()) {
+            for (PlannerIngredientStack itemStack : recipe.getRecipe().getCatalysts()) {
+                ingredientRenderer.render(x, y, itemStack, context);
+                x += 18;
+            }
+            x += 18;
+        }
+
         for (PlannerIngredientStack itemStack : recipe.getRecipe().getIngredients()) {
             ingredientRenderer.render(x, y, itemStack, context);
             x += 18;

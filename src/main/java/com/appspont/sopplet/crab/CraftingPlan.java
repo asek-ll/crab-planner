@@ -31,8 +31,8 @@ public class CraftingPlan {
         recalc();
     }
 
-    public void addRecipe(List<PlannerIngredientStack> outputs, List<PlannerIngredientStack> ingredients) {
-        final CraftingRecipe recipe = new CraftingRecipe(new PlannerRecipe(outputs, ingredients), this);
+    public void addRecipe(PlannerRecipe plannerRecipe) {
+        final CraftingRecipe recipe = new CraftingRecipe(plannerRecipe, this);
         recipes.add(recipe);
         recalc();
     }
@@ -82,13 +82,18 @@ public class CraftingPlan {
         final List<PlannerRecipe> recipesToProcess = Lists.newArrayList(recipes);
 
         while (!recipesToProcess.isEmpty()) {
+            boolean locked = true;
             for (PlannerRecipe recipe : recipesToProcess) {
                 final Collection<PlannerRecipe> dependent = deps.get(recipe);
                 if (processedRecipes.containsAll(dependent)) {
                     processedRecipes.add(recipe);
+                    locked = false;
                 }
             }
             recipesToProcess.removeAll(processedRecipes);
+            if (locked) {
+                break;
+            }
         }
 
         final Map<PlannerIngredient, Integer> itemCount = Maps.newHashMap();
