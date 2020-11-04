@@ -6,13 +6,14 @@ import com.appspont.sopplet.crab.gui.planner.Widget;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
 import java.awt.*;
 import java.util.List;
 
-public class InventoryWidget extends Gui implements Widget {
+public class InventoryWidget extends Gui implements Widget, Rectangleable {
 
     private static final ResourceLocation CHEST_GUI_TEXTURE = new ResourceLocation("textures/gui/container/generic_54.png");
 
@@ -21,17 +22,27 @@ public class InventoryWidget extends Gui implements Widget {
     private final IngredientRenderer ingredientRenderer;
     private final Minecraft mc;
     private final String name;
+    private final GuiButton scrollUpButton;
+    private final GuiButton scrollDownButton;
     private int inventoryRows = 2;
+    private int inventoryColumns = 9;
+    private int scrolledBy = 0;
 
     public InventoryWidget(List<PlannerIngredientStack> ingredients,
                            Rectangle area,
                            IngredientRenderer ingredientRenderer,
-                           Minecraft mc, String name) {
+                           Minecraft mc,
+                           String name,
+                           int inventoryRows) {
         this.ingredients = ingredients;
         this.area = area;
         this.ingredientRenderer = ingredientRenderer;
         this.mc = mc;
         this.name = name;
+        this.inventoryRows = inventoryRows;
+
+        scrollUpButton = new GuiButton(1, 0, 0, 18, 18, "^");
+        scrollDownButton = new GuiButton(1, 0, 0, 18, 18, "\\/");
     }
 
     @Override
@@ -47,37 +58,60 @@ public class InventoryWidget extends Gui implements Widget {
         int ingredientLeft = area.x + 8;
         int ingredientTop = area.y + 18;
 
-        int size = (area.width / 18);
+        int from = scrolledBy * inventoryColumns;
+        int to = Math.min(from + inventoryRows * inventoryColumns, ingredients.size());
+
         int i = 0;
-        for (PlannerIngredientStack itemStack : ingredients) {
-            int y = i / size;
-            int x = i % size;
-            int x1 = ingredientLeft + x * 18;
-            int y1 = ingredientTop + y * 18;
-            ingredientRenderer.render(x1, y1, itemStack, context);
+        if (to > from) {
+            while (from + i < to) {
+                int y = i / inventoryColumns;
+                int x = i % inventoryColumns;
+                int x1 = ingredientLeft + x * 18;
+                int y1 = ingredientTop + y * 18;
+                ingredientRenderer.render(x1, y1, ingredients.get(from + i), context);
 
-            if (context.mouseX > x1 && context.mouseX < x1 + 18 && context.mouseY > y1 && context.mouseY < y1 + 18) {
-                GlStateManager.disableLighting();
-                GlStateManager.disableDepth();
-                GlStateManager.colorMask(true, true, true, false);
-                this.drawGradientRect(x1, y1, x1 + 16, y1 + 16, -2130706433, -2130706433);
-                GlStateManager.colorMask(true, true, true, true);
-                GlStateManager.enableLighting();
-                GlStateManager.enableDepth();
+                if (context.mouseX > x1 && context.mouseX < x1 + 18 && context.mouseY > y1 && context.mouseY < y1 + 18) {
+                    GlStateManager.disableLighting();
+                    GlStateManager.disableDepth();
+                    GlStateManager.colorMask(true, true, true, false);
+                    this.drawGradientRect(x1, y1, x1 + 16, y1 + 16, -2130706433, -2130706433);
+                    GlStateManager.colorMask(true, true, true, true);
+                    GlStateManager.enableLighting();
+                    GlStateManager.enableDepth();
+                }
+
+
+                i += 1;
             }
-
-
-            i += 1;
         }
 
-        int rgb = Color.RED.getRGB();
-        drawHorizontalLine(area.x, area.x + area.width, area.y, rgb);
-        drawVerticalLine(area.x, area.y, area.y + area.height, rgb);
-        drawHorizontalLine(area.x, area.x + area.width, area.y + area.height, rgb);
-        drawVerticalLine(area.x + area.width, area.y, area.y + area.height, rgb);
+        if (scrolledBy > 0) {
+            scrollUpButton.enabled = true;
+            scrollUpButton.y = area.y;
+            scrollUpButton.x = ingredientLeft + inventoryColumns * 18 + 6;
+            scrollUpButton.drawButton(mc, context.mouseX, context.mouseY, context.partialTicks);
+        } else {
+            scrollUpButton.enabled = false;
+        }
 
+        int rows = (int)Math.ceil((double) ingredients.size() / inventoryColumns);
+        if (rows - scrolledBy > inventoryRows) {
+            scrollDownButton.enabled = true;
+            scrollDownButton.y = ingredientTop + inventoryRows * 18 - 14;
+            scrollDownButton.x = ingredientLeft + inventoryColumns * 18 + 6;
+            scrollDownButton.drawButton(mc, context.mouseX, context.mouseY, context.partialTicks);
+        } else {
+            scrollDownButton.enabled = false;
+        }
+
+//        int rgb = Color.RED.getRGB();
+//        drawHorizontalLine(area.x, area.x + area.width, area.y, rgb);
+//        drawVerticalLine(area.x, area.y, area.y + area.height, rgb);
+//        drawHorizontalLine(area.x, area.x + area.width, area.y + area.height, rgb);
+//        drawVerticalLine(area.x + area.width, area.y, area.y + area.height, rgb);
     }
 
+    @Override
     public Rectangle getArea() {
         return area;
     }
@@ -88,10 +122,21 @@ public class InventoryWidget extends Gui implements Widget {
 
     @Override
     public boolean mouseClicked(int x, int y, int button) {
+        if (scrollUpButton.isMouseOver() && scrolledBy > 0 && scrollUpButton.enabled) {
+            scrolledBy -= 1;
+            return true;
+        }
+        if (scrollDownButton.isMouseOver() && scrollDownButton.enabled) {
+            int rows = (int)Math.ceil((double) ingredients.size() / inventoryColumns);
+            if (rows - scrolledBy > inventoryRows) {
+                scrolledBy += 1;
+            }
+            return true;
+        }
         return false;
     }
 
-    public void setIngredients(List<PlannerIngredientStack> result) {
+    public void setStacks(List<PlannerIngredientStack> result) {
         ingredients.clear();
         ingredients.addAll(result);
     }
@@ -103,8 +148,8 @@ public class InventoryWidget extends Gui implements Widget {
         int column = (x - ingredientLeft) / 18;
         int row = (y - ingredientTop) / 18;
 
-        if (column < 9 && row < inventoryRows) {
-            int index = row * 9 + column;
+        if (column < inventoryColumns && row < inventoryRows) {
+            int index = (row + scrolledBy) * inventoryColumns + column;
             if (index < ingredients.size()) {
                 return ingredients.get(index);
             }

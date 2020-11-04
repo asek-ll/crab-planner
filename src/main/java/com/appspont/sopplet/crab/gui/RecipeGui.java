@@ -69,9 +69,9 @@ public class RecipeGui extends GuiContainer {
         ingredientRenderer = new IngredientRenderer(this.ingredientRegistry, mc);
         drawContext = new DrawContext();
 
-        results = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 100, 180, 60), ingredientRenderer, mc, "Result");
-        catalysts = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 160, 180, 60), ingredientRenderer, mc, "Catalyst");
-        ingredients = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 220, 180, 60), ingredientRenderer, mc, "Ingredients");
+        results = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 100, 200, 60), ingredientRenderer, mc, "Result", 2);
+        catalysts = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 160, 200, 60), ingredientRenderer, mc, "Catalyst", 2);
+        ingredients = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 220, 200, 60), ingredientRenderer, mc, "Ingredients", 2);
 
         inventories = Arrays.asList(results, catalysts, ingredients);
 
@@ -83,9 +83,9 @@ public class RecipeGui extends GuiContainer {
     public void setRecipe(IRecipeLayout recipeLayout) {
         this.recipeLayout = recipeLayout;
         PlannerRecipe plannerRecipe = prepareRecipe(recipeLayout);
-        results.setIngredients(plannerRecipe.getResult());
-        catalysts.setIngredients(plannerRecipe.getCatalysts());
-        ingredients.setIngredients(plannerRecipe.getIngredients());
+        results.setStacks(plannerRecipe.getResult());
+        catalysts.setStacks(plannerRecipe.getCatalysts());
+        ingredients.setStacks(plannerRecipe.getIngredients());
     }
 
     public static PlannerRecipe prepareRecipe(IRecipeLayout iRecipeLayout) {
@@ -149,7 +149,7 @@ public class RecipeGui extends GuiContainer {
     public void initGui() {
         super.initGui();
         ySize = 240;
-        xSize = 180;
+        xSize = 200;
         this.guiLeft = (width - xSize) / 2;
         this.guiTop = (height - ySize) / 2;
         this.draggedStack = null;
@@ -232,6 +232,8 @@ public class RecipeGui extends GuiContainer {
                     if (stack != null) {
                         inventory.getIngredients().remove(stack);
                         setDraggedStack(stack);
+                    } else if (inventory.mouseClicked(x, y, p_mouseClicked_3_)) {
+                        return;
                     }
                 }
                 return;

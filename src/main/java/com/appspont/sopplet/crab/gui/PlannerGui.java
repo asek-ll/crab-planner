@@ -4,27 +4,21 @@ import com.appspont.sopplet.crab.CraftingPlan;
 import com.appspont.sopplet.crab.CraftingPlanContainer;
 import com.appspont.sopplet.crab.CraftingRecipe;
 import com.appspont.sopplet.crab.PlanStoreManager;
-import com.appspont.sopplet.crab.gui.planner.CraftingPlanListeners;
-import com.appspont.sopplet.crab.gui.planner.CraftingStepsWidget;
-import com.appspont.sopplet.crab.gui.planner.DrawContext;
-import com.appspont.sopplet.crab.gui.planner.Goals;
-import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
-import com.appspont.sopplet.crab.gui.planner.PlanItemsWidget;
-import com.appspont.sopplet.crab.gui.planner.RectangleWidget;
-import com.appspont.sopplet.crab.gui.planner.RequiredItemsWidget;
-import com.appspont.sopplet.crab.gui.planner.WidgetContainer;
+import com.appspont.sopplet.crab.gui.planner.*;
+import com.appspont.sopplet.crab.gui.planner.widget.InventoryWidget;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerFluidStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
+import mezz.jei.api.IJeiRuntime;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IIngredientRenderer;
+import mezz.jei.api.recipe.IFocus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.util.ITooltipFlag;
@@ -39,6 +33,7 @@ import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
@@ -46,11 +41,12 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
     private CraftingPlan plan;
     private final Goals goals;
-    private final WidgetContainer<RectangleWidget> widgetWidgetContainer;
+    private final WidgetContainer<InventoryWidget> widgetWidgetContainer;
     private final int backgroundColor;
     private final DrawContext drawContext;
     private final CraftingStepsWidget craftingSteps;
-    private final RequiredItemsWidget requiredItems;
+//    private final RequiredItemsWidget requiredItems;
+    private final InventoryWidget requiredItems;
     private final PlanItemsWidget planItems;
     private final IIngredientRegistry ingredientRegistry;
     private final GuiTextField fileNameTextField;
@@ -64,7 +60,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
     @Override
     public void updateRequired(List<PlannerIngredientStack> stacks) {
-        requiredItems.setItems(stacks);
+        requiredItems.setStacks(stacks);
     }
 
     @Override
@@ -84,7 +80,8 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
         IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
 
-        requiredItems = new RequiredItemsWidget(ingredientRenderer);
+        requiredItems = new InventoryWidget(new ArrayList<>(), new Rectangle(0, 0, 100, 100),ingredientRenderer,mc, "Required", 4);
+//        requiredItems = new RequiredItemsWidget(ingredientRenderer);
         craftingSteps = new CraftingStepsWidget(ingredientRenderer, mc);
         goals = new Goals(mc, ingredientRenderer);
         planItems = new PlanItemsWidget(mc, this);
@@ -145,7 +142,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         goals.setDimensions(xSize / 2, 80, 0, 84);
         goals.left=guiLeft;
 
-        requiredItems.setBounds(guiLeft, 250, xSize, 150);
+        requiredItems.getArea().setBounds(guiLeft, 250, 200, 150);
 
         planItems.setDimensions(xSize / 2, 60, 20, 84);
         planItems.left = guiLeft + xSize / 2;
@@ -215,7 +212,16 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
     @Override
     protected void mouseClicked(int x, int y, int button) {
         if (widgetWidgetContainer.contains(x, y)) {
-            widgetWidgetContainer.mouseClicked(x, y, button);
+            if (widgetWidgetContainer.mouseClicked(x, y, button)) {
+                return;
+            }
+            PlannerIngredientStack stack = requiredItems.getStackAt(x, y);
+            if (stack != null) {
+                final IJeiRuntime jeiRuntime = CrabJeiPlugin.getJeiRuntime();
+                final IFocus<Object> focus = jeiRuntime.getRecipeRegistry().createFocus(IFocus.Mode.OUTPUT, stack.getIngredient().getRawStack());
+                jeiRuntime.getRecipesGui().show(focus);
+                return;
+            }
         }
         fileNameTextField.mouseClicked(x, y, button);
         if (saveGuiButton.isMouseOver()) {
