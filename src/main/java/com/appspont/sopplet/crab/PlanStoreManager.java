@@ -4,7 +4,6 @@ import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import java.io.*;
 import java.util.Arrays;
@@ -61,6 +60,14 @@ public class PlanStoreManager {
             setCurrentPlan(readFromFile(file));
         }
         return currentPlan;
+    }
+
+    public boolean remove(String planName) {
+        final File file = new File(baseDir, planName);
+        if (file.exists()) {
+            return file.delete();
+        }
+        return false;
     }
 
     private CraftingPlan readFromFile(File file) {

@@ -48,6 +48,9 @@ public class PlanItemWidget extends RectangleWidget {
             return true;
         }
         if (removeButton.isMouseOver()) {
+            CrabJeiPlugin.getPlanStoreManager().remove(name);
+            parent.updatePlanItems();
+            return true;
         }
         return false;
     }

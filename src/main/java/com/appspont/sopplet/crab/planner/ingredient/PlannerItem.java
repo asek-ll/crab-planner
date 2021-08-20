@@ -38,5 +38,10 @@ public class PlannerItem extends PlannerIngredient<ItemStack> {
         copy.setCount(amount);
         return new PlannerItemStack(copy);
     }
+
+    @Override
+    public int getAmount() {
+        return stack.getCount();
+    }
 }
 

@@ -2,6 +2,7 @@ package com.appspont.sopplet.crab.gui;
 
 import com.appspont.sopplet.crab.CraftingPlan;
 import com.appspont.sopplet.crab.PlannerRecipe;
+import com.appspont.sopplet.crab.gui.planner.DragStack;
 import com.appspont.sopplet.crab.gui.planner.DrawContext;
 import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
 import com.appspont.sopplet.crab.gui.planner.widget.InventoryWidget;
@@ -23,7 +24,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
@@ -37,8 +37,8 @@ import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RecipeGui extends GuiContainer {
@@ -53,8 +53,7 @@ public class RecipeGui extends GuiContainer {
     private final GuiButton saveButton;
     private final GuiButton cancelButton;
     private IRecipeLayout recipeLayout;
-    private PlannerIngredientStack draggedStack = null;
-    private final GuiTextField sizeInput;
+    private DragStack dragStack;
     private GuiScreen parentScreen;
     private CraftingPlan plan;
 
@@ -69,13 +68,15 @@ public class RecipeGui extends GuiContainer {
         ingredientRenderer = new IngredientRenderer(this.ingredientRegistry, mc);
         drawContext = new DrawContext();
 
-        results = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 100, 200, 60), ingredientRenderer, mc, "Result", 2);
-        catalysts = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 160, 200, 60), ingredientRenderer, mc, "Catalyst", 2);
-        ingredients = new InventoryWidget(new ArrayList<>(), new Rectangle(100, 220, 200, 60), ingredientRenderer, mc, "Ingredients", 2);
+        results = new InventoryWidget(new Point(100, 100), ingredientRenderer, mc, "Result", 2);
+        catalysts = new InventoryWidget(new Point(100, 160), ingredientRenderer, mc, "Catalyst", 2);
+        ingredients = new InventoryWidget(new Point(100, 220), ingredientRenderer, mc, "Ingredients", 2);
 
         inventories = Arrays.asList(results, catalysts, ingredients);
 
-        sizeInput = new GuiTextField(0, mc.fontRenderer, 1, 0, 18, 18);
+        dragStack = new DragStack(mc, ingredientRenderer);
+
+        this.guiLeft = (width - xSize) / 2;
         saveButton = new GuiButton(1, 0, 0, 70 - 8, 20, "Save");
         cancelButton = new GuiButton(1, 0, 0, 70 - 8, 20, "Cancel");
     }
@@ -152,7 +153,8 @@ public class RecipeGui extends GuiContainer {
         xSize = 200;
         this.guiLeft = (width - xSize) / 2;
         this.guiTop = (height - ySize) / 2;
-        this.draggedStack = null;
+        dragStack.setDraggedStack(null);
+        dragStack.setJeiLeft(guiLeft + xSize);
 
         int yOffset = guiTop;
         results.getArea().setLocation(guiLeft, yOffset);
@@ -163,11 +165,6 @@ public class RecipeGui extends GuiContainer {
         yOffset += ingredients.getArea().getHeight() + 2;
 
         int xOffset = guiLeft;
-
-        sizeInput.x = xOffset;
-        sizeInput.y = yOffset;
-        sizeInput.width = 60;
-        xOffset += sizeInput.width + 6;
 
         cancelButton.x = xOffset;
         cancelButton.y = yOffset;
@@ -197,7 +194,6 @@ public class RecipeGui extends GuiContainer {
         catalysts.draw(drawContext);
         ingredients.draw(drawContext);
 
-        sizeInput.drawTextBox();
         cancelButton.drawButton(mc, mouseX, mouseY, partialTicks);
         saveButton.drawButton(mc, mouseX, mouseY, partialTicks);
 
@@ -209,10 +205,7 @@ public class RecipeGui extends GuiContainer {
             GuiUtils.drawHoveringText(tooltip, mouseX, mouseY, 600, 400, -1, fontRenderer);
         }
 
-        if (draggedStack != null) {
-            ingredientRenderer.render(mouseX - 8, mouseY - 8, draggedStack, drawContext);
-        }
-
+        dragStack.draw(drawContext);
     }
 
     @Override
@@ -222,16 +215,17 @@ public class RecipeGui extends GuiContainer {
 
     @Override
     protected void mouseClicked(int x, int y, int p_mouseClicked_3_) throws IOException {
+        PlannerIngredientStack draggedStack = dragStack.getDraggedStack();
         for (InventoryWidget inventory : inventories) {
             if (inventory.getArea().contains(x, y)) {
                 if (draggedStack != null) {
                     inventory.getIngredients().add(draggedStack);
-                    setDraggedStack(null);
+                    dragStack.setDraggedStack(null);
                 } else {
                     PlannerIngredientStack stack = inventory.getStackAt(x, y);
                     if (stack != null) {
                         inventory.getIngredients().remove(stack);
-                        setDraggedStack(stack);
+                        dragStack.setDraggedStack(stack);
                     } else if (inventory.mouseClicked(x, y, p_mouseClicked_3_)) {
                         return;
                     }
@@ -258,50 +252,10 @@ public class RecipeGui extends GuiContainer {
 
     }
 
-    private void setDraggedStack(PlannerIngredientStack stack) {
-        draggedStack = stack;
-        if (stack != null) {
-            sizeInput.setFocused(true);
-            sizeInput.setText(String.valueOf(stack.getAmount()));
-        } else {
-            sizeInput.setFocused(false);
-            sizeInput.setText("");
-        }
-    }
-
-    private boolean interceptMouseClick() {
-        if (Mouse.getEventButton() > -1) {
-            if (Mouse.getEventButtonState()) {
-                int x = Mouse.getEventX() * width / mc.displayWidth;
-                if (x > (guiLeft + xSize) && draggedStack != null) {
-                    setDraggedStack(null);
-                    return true;
-                }
-                final Object ingredientUnderMouse =
-                        CrabJeiPlugin.getJeiRuntime().getIngredientListOverlay().getIngredientUnderMouse();
-
-                if (ingredientUnderMouse != null) {
-                    PlannerIngredientStack stack = null;
-                    if (ingredientUnderMouse instanceof ItemStack) {
-                        stack = new PlannerItemStack((ItemStack) ingredientUnderMouse);
-                    } else if (ingredientUnderMouse instanceof FluidStack) {
-                        stack = new PlannerFluidStack((FluidStack) ingredientUnderMouse);
-                    }
-                    if (stack != null) {
-                        setDraggedStack(stack);
-                    }
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     public void handleInput() throws IOException {
         if (Mouse.isCreated()) {
             while (Mouse.next()) {
-                if (!interceptMouseClick()) {
+                if (!dragStack.interceptMouseClick()) {
                     if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Pre(this))) {
                         this.handleMouseInput();
                         if (this.equals(this.mc.currentScreen)) {
@@ -325,18 +279,16 @@ public class RecipeGui extends GuiContainer {
     }
 
     @Override
-    protected void keyTyped(char key, int eventKey) throws IOException {
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        for (InventoryWidget inventory : inventories) {
+            inventory.handleMouseInput();
+        }
+    }
 
-        if (sizeInput.textboxKeyTyped(key, eventKey)) {
-            if (draggedStack != null) {
-                int amount;
-                try {
-                    amount = Math.max(1, Integer.parseInt(sizeInput.getText()));
-                } catch (NumberFormatException ignored) {
-                    amount = 1;
-                }
-                draggedStack.setAmount(amount);
-            }
+    @Override
+    protected void keyTyped(char key, int eventKey) throws IOException {
+        if (dragStack.keyTyped(key, eventKey)) {
             return;
         }
 

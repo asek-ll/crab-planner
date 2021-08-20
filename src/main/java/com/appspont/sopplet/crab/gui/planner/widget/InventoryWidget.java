@@ -9,53 +9,62 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Mouse;
 
 import java.awt.*;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryWidget extends Gui implements Widget, Rectangleable {
 
-    private static final ResourceLocation CHEST_GUI_TEXTURE = new ResourceLocation("textures/gui/container/generic_54.png");
+    private static final ResourceLocation CREATIVE_INVENTORY_TAB_ITEMS = new ResourceLocation("textures/gui/container/creative_inventory/tab_items.png");
+    private static final ResourceLocation CREATIVE_INVENTORY_TABS = new ResourceLocation("textures/gui/container/creative_inventory/tabs.png");
 
     private final List<PlannerIngredientStack> ingredients;
     private final Rectangle area;
     private final IngredientRenderer ingredientRenderer;
     private final Minecraft mc;
     private final String name;
-    private final GuiButton scrollUpButton;
-    private final GuiButton scrollDownButton;
     private int inventoryRows = 2;
     private int inventoryColumns = 9;
     private int scrolledBy = 0;
+    protected int mouseX;
+    protected int mouseY;
 
-    public InventoryWidget(List<PlannerIngredientStack> ingredients,
-                           Rectangle area,
+    public InventoryWidget(Point pos,
                            IngredientRenderer ingredientRenderer,
                            Minecraft mc,
                            String name,
                            int inventoryRows) {
-        this.ingredients = ingredients;
-        this.area = area;
+        this.ingredients = new ArrayList<>();
+        this.area = new Rectangle(pos);
+        this.area.setSize(194, inventoryRows * 18 + 21);
         this.ingredientRenderer = ingredientRenderer;
         this.mc = mc;
         this.name = name;
         this.inventoryRows = inventoryRows;
-
-        scrollUpButton = new GuiButton(1, 0, 0, 18, 18, "^");
-        scrollDownButton = new GuiButton(1, 0, 0, 18, 18, "\\/");
     }
 
     @Override
     public void draw(DrawContext context) {
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+
+        mouseX = context.mouseX;
+        mouseY = context.mouseY;
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
+        mc.getTextureManager().bindTexture(CREATIVE_INVENTORY_TAB_ITEMS);
 //        mc.getTextureManager().bindTexture(GuiContainer.INVENTORY_BACKGROUND);
         this.drawTexturedModalRect(area.x, area.y, 0, 0, area.width, this.inventoryRows * 18 + 17);
-        this.drawTexturedModalRect(area.x, area.y + inventoryRows * 18 + 17, 0, 214, area.width, 8);
+        this.drawTexturedModalRect(area.x, area.y + inventoryRows * 18 + 17, 0, 130, area.width, 4);
+
+//        GlStateManager.enableLighting();
+//        GlStateManager.enableDepth();
 
         mc.fontRenderer.drawString(name, area.x + 7, area.y + 6, 4210752);
 
-        int ingredientLeft = area.x + 8;
+        int ingredientLeft = area.x + 9;
         int ingredientTop = area.y + 18;
 
         int from = scrolledBy * inventoryColumns;
@@ -85,24 +94,14 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
             }
         }
 
-        if (scrolledBy > 0) {
-            scrollUpButton.enabled = true;
-            scrollUpButton.y = area.y;
-            scrollUpButton.x = ingredientLeft + inventoryColumns * 18 + 6;
-            scrollUpButton.drawButton(mc, context.mouseX, context.mouseY, context.partialTicks);
-        } else {
-            scrollUpButton.enabled = false;
-        }
+        this.mc.getTextureManager().bindTexture(CREATIVE_INVENTORY_TABS);
 
-        int rows = (int)Math.ceil((double) ingredients.size() / inventoryColumns);
-        if (rows - scrolledBy > inventoryRows) {
-            scrollDownButton.enabled = true;
-            scrollDownButton.y = ingredientTop + inventoryRows * 18 - 14;
-            scrollDownButton.x = ingredientLeft + inventoryColumns * 18 + 6;
-            scrollDownButton.drawButton(mc, context.mouseX, context.mouseY, context.partialTicks);
-        } else {
-            scrollDownButton.enabled = false;
-        }
+        int rows = (int) Math.ceil((double) ingredients.size() / inventoryColumns);
+        int excessRows = rows - inventoryRows;
+        boolean hasScroll = excessRows > 0;
+        double ratio = hasScroll ? (double) scrolledBy / excessRows : 0.0;
+        int offset = (int) ((inventoryRows * 18 - 15) * ratio);
+        this.drawTexturedModalRect(area.x + 175, area.y + 18 + offset, 232 + (hasScroll ? 0 : 12), 0, 12, 15);
 
 //        int rgb = Color.RED.getRGB();
 //        drawHorizontalLine(area.x, area.x + area.width, area.y, rgb);
@@ -122,17 +121,6 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
 
     @Override
     public boolean mouseClicked(int x, int y, int button) {
-        if (scrollUpButton.isMouseOver() && scrolledBy > 0 && scrollUpButton.enabled) {
-            scrolledBy -= 1;
-            return true;
-        }
-        if (scrollDownButton.isMouseOver() && scrollDownButton.enabled) {
-            int rows = (int)Math.ceil((double) ingredients.size() / inventoryColumns);
-            if (rows - scrolledBy > inventoryRows) {
-                scrolledBy += 1;
-            }
-            return true;
-        }
         return false;
     }
 
@@ -156,5 +144,27 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
         }
 
         return null;
+    }
+
+    public void handleMouseInput() throws IOException {
+        if (!area.contains(mouseX, mouseY)) {
+            return;
+        }
+        int i = Mouse.getEventDWheel();
+        if (i != 0) {
+            int rows = (int) Math.ceil((double) ingredients.size() / inventoryColumns);
+            int excessRows = rows - inventoryRows;
+            if (excessRows > 0) {
+                if (i < 0) {
+                    if (rows - scrolledBy > inventoryRows) {
+                        scrolledBy += 1;
+                    }
+                } else {
+                    if (scrolledBy > 0) {
+                        scrolledBy -= 1;
+                    }
+                }
+            }
+        }
     }
 }

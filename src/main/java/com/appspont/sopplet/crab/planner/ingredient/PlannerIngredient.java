@@ -9,6 +9,8 @@ public abstract class PlannerIngredient<T> {
 
     public abstract PlannerIngredientStack createStack(int amount);
 
+    public abstract int getAmount();
+
     public T getRawStack() {
         return stack;
     }

@@ -60,7 +60,7 @@ public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {
         drawFluid(minecraft, xPosition, yPosition, fluidStack);
         drawAmount(minecraft.fontRenderer, formatAmount(fluidStack.amount), xPosition, yPosition);
 
-        GlStateManager.color(1, 1, 1, 1);
+//        GlStateManager.color(1, 1, 1, 1);
 
         GlStateManager.disableAlpha();
         GlStateManager.disableBlend();
@@ -112,9 +112,9 @@ public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {
         final int Y = (int) (((float) yPos + offset + 16.0f - 7.0f * scaleFactor) * inverseScaleFactor);
         fontRenderer.drawStringWithShadow(amount, X, Y, 16777215);
         GlStateManager.popMatrix();
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
+//        GlStateManager.enableLighting();
+//        GlStateManager.enableDepth();
+//        GlStateManager.enableBlend();
 
         fontRenderer.setUnicodeFlag(unicodeFlag);
     }

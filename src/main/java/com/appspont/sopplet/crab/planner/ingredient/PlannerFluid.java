@@ -29,4 +29,9 @@ public class PlannerFluid extends PlannerIngredient<FluidStack> {
         copy.amount = amount;
         return new PlannerFluidStack(copy);
     }
+
+    @Override
+    public int getAmount() {
+        return stack.amount;
+    }
 }

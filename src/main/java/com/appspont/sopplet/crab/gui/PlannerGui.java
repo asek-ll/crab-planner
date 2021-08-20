@@ -6,10 +6,8 @@ import com.appspont.sopplet.crab.CraftingRecipe;
 import com.appspont.sopplet.crab.PlanStoreManager;
 import com.appspont.sopplet.crab.gui.planner.*;
 import com.appspont.sopplet.crab.gui.planner.widget.InventoryWidget;
-import com.appspont.sopplet.crab.planner.ingredient.PlannerFluidStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
 import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
 import mezz.jei.api.IJeiRuntime;
@@ -19,12 +17,13 @@ import mezz.jei.api.recipe.IFocus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -33,25 +32,25 @@ import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SideOnly(Side.CLIENT)
 public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
     private CraftingPlan plan;
-    private final Goals goals;
+    private final InventoryWidget goals;
     private final WidgetContainer<InventoryWidget> widgetWidgetContainer;
     private final int backgroundColor;
     private final DrawContext drawContext;
     private final CraftingStepsWidget craftingSteps;
-//    private final RequiredItemsWidget requiredItems;
     private final InventoryWidget requiredItems;
     private final PlanItemsWidget planItems;
     private final IIngredientRegistry ingredientRegistry;
     private final GuiTextField fileNameTextField;
     private final GuiButton saveGuiButton;
     private final PlanStoreManager planStoreManager;
+    private final DragStack dragStack;
 
     @Override
     public void updateCraftingSteps(List<CraftingRecipe> recipes) {
@@ -65,10 +64,11 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
     @Override
     public void updateGoals(List<PlannerGoal> plannerGoals) {
-        goals.setGoals(plannerGoals);
+//        goals.setGoals(plannerGoals);
+        goals.setStacks(plannerGoals.stream().map(PlannerGoal::getIngredientStack).collect(Collectors.toList()));
     }
 
-    private void updatePlanItems() {
+    public void updatePlanItems() {
         planItems.setNames(planStoreManager.getPlanNames());
     }
 
@@ -80,14 +80,14 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         ingredientRegistry = CrabJeiPlugin.getModRegistry().getIngredientRegistry();
         IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
 
-        requiredItems = new InventoryWidget(new ArrayList<>(), new Rectangle(0, 0, 100, 100),ingredientRenderer,mc, "Required", 4);
-//        requiredItems = new RequiredItemsWidget(ingredientRenderer);
+        requiredItems = new InventoryWidget(new Point(0, 0), ingredientRenderer, mc, "Required", 4);
         craftingSteps = new CraftingStepsWidget(ingredientRenderer, mc);
-        goals = new Goals(mc, ingredientRenderer);
+        goals = new InventoryWidget(new Point(0, 0), ingredientRenderer, mc, "Target", 2);
         planItems = new PlanItemsWidget(mc, this);
         widgetWidgetContainer = new WidgetContainer<>(ImmutableList.of(
                 requiredItems
         ));
+        dragStack = new DragStack(mc, ingredientRenderer);
 
         drawContext = new DrawContext();
 
@@ -106,9 +106,10 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
         this.drawDefaultBackground();
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
+//        super.drawScreen(mouseX, mouseY, partialTicks);
 
         goals.draw(drawContext);
+//        if (true) return;
         craftingSteps.draw(drawContext);
 
         widgetWidgetContainer.draw(drawContext);
@@ -117,13 +118,17 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
             final Object rawStack = drawContext.hoverStack.getRawStack();
             final IIngredientRenderer<Object> renderer = ingredientRegistry.getIngredientRenderer(rawStack);
             final List<String> tooltip = renderer.getTooltip(mc, rawStack, ITooltipFlag.TooltipFlags.NORMAL);
+            tooltip.add(TextFormatting.GRAY + "Amount: " + drawContext.hoverStack.getAmount());
             final FontRenderer fontRenderer = renderer.getFontRenderer(mc, rawStack);
             GuiUtils.drawHoveringText(tooltip, mouseX, mouseY, 600, 400, -1, fontRenderer);
+            GlStateManager.disableLighting();
         }
 
         fileNameTextField.drawTextBox();
         saveGuiButton.drawButton(mc, mouseX, mouseY, partialTicks);
         planItems.draw(drawContext);
+
+        dragStack.draw(drawContext);
     }
 
     @Override
@@ -139,10 +144,9 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         this.xSize = this.width - 200;
         craftingSteps.setDimensions(xSize, 160, 86, 250);
         craftingSteps.left = guiLeft;
-        goals.setDimensions(xSize / 2, 80, 0, 84);
-        goals.left=guiLeft;
+        goals.getArea().setLocation(guiLeft, 20);
 
-        requiredItems.getArea().setBounds(guiLeft, 250, 200, 150);
+        requiredItems.getArea().setLocation(guiLeft, 250);
 
         planItems.setDimensions(xSize / 2, 60, 20, 84);
         planItems.left = guiLeft + xSize / 2;
@@ -154,36 +158,15 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         fileNameTextField.width = xSize / 2 - 70;
 
         saveGuiButton.x = guiLeft + xSize - 70;
-    }
 
-    private boolean interceptMouseClick() {
-        if (Mouse.getEventButton() > -1) {
-            if (Mouse.getEventButtonState()) {
-                final Object ingredientUnderMouse =
-                        CrabJeiPlugin.getJeiRuntime().getIngredientListOverlay().getIngredientUnderMouse();
-
-                if (ingredientUnderMouse != null) {
-                    PlannerIngredientStack stack = null;
-                    if (ingredientUnderMouse instanceof ItemStack) {
-                        stack = new PlannerItemStack((ItemStack) ingredientUnderMouse);
-                    } else if (ingredientUnderMouse instanceof FluidStack) {
-                        stack = new PlannerFluidStack((FluidStack) ingredientUnderMouse);
-                    }
-                    if (stack != null) {
-                        plan.addGoal(stack);
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        dragStack.setDraggedStack(null);
+        dragStack.setJeiLeft(guiLeft + xSize);
     }
 
     public void handleInput() throws IOException {
         if (Mouse.isCreated()) {
             while (Mouse.next()) {
-                if (!interceptMouseClick()) {
+                if (!dragStack.interceptMouseClick()) {
                     if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Pre(this))) {
                         this.handleMouseInput();
                         if (this.equals(this.mc.currentScreen)) {
@@ -194,6 +177,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
                 goals.handleMouseInput();
                 craftingSteps.handleMouseInput();
                 planItems.handleMouseInput();
+                requiredItems.handleMouseInput();
             }
         }
 
@@ -226,6 +210,27 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         fileNameTextField.mouseClicked(x, y, button);
         if (saveGuiButton.isMouseOver()) {
             savePlan();
+            return;
+        }
+        if (goals.getArea().contains(x, y)) {
+            PlannerIngredientStack draggedStack = dragStack.getDraggedStack();
+            if (draggedStack != null) {
+                goals.getIngredients().add(draggedStack);
+                dragStack.setDraggedStack(null);
+                plan.addGoal(draggedStack);
+            } else {
+                PlannerIngredientStack stack = goals.getStackAt(x, y);
+                if (stack != null) {
+                    goals.getIngredients().remove(stack);
+                    plan.getGoals().stream()
+                            .filter(g -> g.getIngredientStack().equals(stack))
+                            .findFirst()
+                            .ifPresent(plan::removeGoal);
+                    dragStack.setDraggedStack(stack);
+                }
+
+            }
+            return;
         }
     }
 
@@ -260,6 +265,10 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
         if (fileNameTextField.textboxKeyTyped(key, eventKey)) {
             plan.setName(fileNameTextField.getText());
+            return;
+        }
+
+        if (dragStack.keyTyped(key, eventKey)) {
             return;
         }
 
