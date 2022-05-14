@@ -22,6 +22,7 @@ public class CraftingPlan {
     private final List<PlannerGoal> goals = Lists.newArrayList();
     private final List<CraftingRecipe> recipes = Lists.newArrayList();
     private final List<PlannerIngredientStack> required = Lists.newArrayList();
+    private final List<PlannerIngredientStack> inventory = Lists.newArrayList();
 
     private final List<CraftingPlanListeners> listeners = Lists.newArrayList();
 
@@ -96,10 +97,14 @@ public class CraftingPlan {
             }
         }
 
-        final Map<PlannerIngredient, Integer> itemCount = Maps.newHashMap();
+        final Map<PlannerIngredient<?>, Integer> itemCount = Maps.newHashMap();
         for (PlannerGoal goal : goals) {
             itemCount.put(goal.getIngredient(),
                     itemCount.getOrDefault(goal.getIngredient(), 0) - goal.getAmount());
+        }
+        for (PlannerIngredientStack stack : inventory) {
+            itemCount.put(stack.getIngredient(),
+                    itemCount.getOrDefault(stack.getIngredient(), 0) + stack.getAmount());
         }
 
         this.recipes.clear();
@@ -152,6 +157,11 @@ public class CraftingPlan {
         recalc();
     }
 
+    public void removeInventoryItem(PlannerIngredientStack source) {
+        inventory.remove(source);
+        recalc();
+    }
+
     private void updateGoals() {
         for (CraftingPlanListeners listener : listeners) {
             listener.updateGoals(goals);
@@ -173,6 +183,10 @@ public class CraftingPlan {
         return required;
     }
 
+    public List<PlannerIngredientStack> getInventory() {
+        return inventory;
+    }
+
     public void save() {
 
     }
@@ -187,6 +201,11 @@ public class CraftingPlan {
 
     public String getName() {
         return name;
+    }
+
+    public void addInventoryStack(PlannerIngredientStack draggedStack) {
+        inventory.add(draggedStack);
+        recalc();
     }
 
     public static class JsonHelper implements JsonSerializer<CraftingPlan>, JsonDeserializer<CraftingPlan> {
@@ -225,6 +244,12 @@ public class CraftingPlan {
 
             craftingPlan.required.addAll(required);
 
+            JsonArray inventory = jsonObject.getAsJsonArray("inventory");
+            if (inventory != null) {
+                final List<PlannerIngredientStack> inventoryStacks = StackUtils.fromJsonArray(inventory, PlannerIngredientStack.class, context);
+                craftingPlan.inventory.addAll(inventoryStacks);
+            }
+
             return craftingPlan;
         }
 
@@ -234,6 +259,7 @@ public class CraftingPlan {
             jsonObject.add("goals", StackUtils.toJsonArray(src.goals, PlannerGoal.class, context));
             jsonObject.add("recipes", StackUtils.toJsonArray(src.recipes, CraftingRecipe.class, context));
             jsonObject.add("required", StackUtils.toJsonArray(src.required, PlannerIngredientStack.class, context));
+            jsonObject.add("inventory", StackUtils.toJsonArray(src.inventory, PlannerIngredientStack.class, context));
             return jsonObject;
         }
     }

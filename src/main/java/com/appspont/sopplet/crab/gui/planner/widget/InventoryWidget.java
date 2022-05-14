@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 
@@ -50,6 +51,8 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
     public void draw(DrawContext context) {
         GlStateManager.disableLighting();
         GlStateManager.disableDepth();
+        GlStateManager.disableAlpha();
+        GlStateManager.disableBlend();
 
         mouseX = context.mouseX;
         mouseY = context.mouseY;
@@ -58,9 +61,6 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
 //        mc.getTextureManager().bindTexture(GuiContainer.INVENTORY_BACKGROUND);
         this.drawTexturedModalRect(area.x, area.y, 0, 0, area.width, this.inventoryRows * 18 + 17);
         this.drawTexturedModalRect(area.x, area.y + inventoryRows * 18 + 17, 0, 130, area.width, 4);
-
-//        GlStateManager.enableLighting();
-//        GlStateManager.enableDepth();
 
         mc.fontRenderer.drawString(name, area.x + 7, area.y + 6, 4210752);
 
@@ -93,6 +93,12 @@ public class InventoryWidget extends Gui implements Widget, Rectangleable {
                 i += 1;
             }
         }
+
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.disableAlpha();
+        GlStateManager.disableBlend();
+
 
         this.mc.getTextureManager().bindTexture(CREATIVE_INVENTORY_TABS);
 

@@ -3,6 +3,7 @@ package com.appspont.sopplet.crab.gui.planner;
 import com.appspont.sopplet.crab.CraftingRecipe;
 import com.appspont.sopplet.crab.PlannerRecipe;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
+import com.google.common.collect.ImmutableList;
 import net.minecraft.client.gui.GuiButton;
 
 import java.awt.*;
@@ -28,9 +29,20 @@ public class CraftStepWidget extends RectangleWidget {
 
         x += 24;
 
-        mc.fontRenderer.drawStringWithShadow(String.valueOf(recipe.getCount()), x + 1, y + 5, Color.white.getRGB());
+        String count = IngredientRenderer.compactCount(recipe.getCount());
+        mc.fontRenderer.drawStringWithShadow(count, x + 1, y + 5, Color.white.getRGB());
 
-        x += 18;
+        if (recipe.getCount() > 10_000 &&
+                context.mouseX > this.x + 24 &&
+                context.mouseX < this.x + 48 &&
+                context.mouseY > this.y &&
+                context.mouseY < this.y + 20
+        ) {
+            context.hoverText = ImmutableList.of(String.valueOf(recipe.getCount()));
+        }
+
+
+        x += 24;
 
         for (PlannerIngredientStack itemStack : recipe.getRecipe().getResult()) {
             ingredientRenderer.render(x, y, itemStack, context);

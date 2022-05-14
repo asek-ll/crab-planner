@@ -68,12 +68,12 @@ public class IngredientRenderer {
             renderStackSize(font, compactCount(count), x, y);
         }
 
-        GlStateManager.disableBlend();
         RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableDepth();
 
     }
 
-    private String compactCount(int count) {
+    public static String compactCount(int count) {
         if (count < 10_000) {
             return String.valueOf(count);
         }

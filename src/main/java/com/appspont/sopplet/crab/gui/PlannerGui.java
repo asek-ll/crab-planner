@@ -49,8 +49,10 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
     private final IIngredientRegistry ingredientRegistry;
     private final GuiTextField fileNameTextField;
     private final GuiButton saveGuiButton;
+    private final GuiButton resetGuiButton;
     private final PlanStoreManager planStoreManager;
     private final DragStack dragStack;
+    private final InventoryWidget inventory;
 
     @Override
     public void updateCraftingSteps(List<CraftingRecipe> recipes) {
@@ -60,6 +62,10 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
     @Override
     public void updateRequired(List<PlannerIngredientStack> stacks) {
         requiredItems.setStacks(stacks);
+    }
+
+    public void updateInventory(List<PlannerIngredientStack> stacks) {
+        inventory.setStacks(stacks);
     }
 
     @Override
@@ -81,11 +87,13 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, mc);
 
         requiredItems = new InventoryWidget(new Point(0, 0), ingredientRenderer, mc, "Required", 4);
+        inventory = new InventoryWidget(new Point(0, 0), ingredientRenderer, mc, "Inventory", 4);
         craftingSteps = new CraftingStepsWidget(ingredientRenderer, mc);
         goals = new InventoryWidget(new Point(0, 0), ingredientRenderer, mc, "Target", 2);
         planItems = new PlanItemsWidget(mc, this);
         widgetWidgetContainer = new WidgetContainer<>(ImmutableList.of(
-                requiredItems
+                requiredItems,
+                inventory
         ));
         dragStack = new DragStack(mc, ingredientRenderer);
 
@@ -93,7 +101,8 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
 
         fileNameTextField = new GuiTextField(0, mc.fontRenderer, 1, 0, 18, 18);
 
-        saveGuiButton = new GuiButton(1, 0, 0, 70 - 8, 20, "Save");
+        saveGuiButton = new GuiButton(1, 0, 0, 50 - 8, 20, "Save");
+        resetGuiButton = new GuiButton(1, 0, 0, 50 - 8, 20, "Reset");
         setPlan(plan);
     }
 
@@ -103,6 +112,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         drawContext.mouseY = mouseY;
         drawContext.partialTicks = partialTicks;
         drawContext.hoverStack = null;
+        drawContext.hoverText = null;
 
         this.drawDefaultBackground();
 
@@ -122,10 +132,13 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
             final FontRenderer fontRenderer = renderer.getFontRenderer(mc, rawStack);
             GuiUtils.drawHoveringText(tooltip, mouseX, mouseY, 600, 400, -1, fontRenderer);
             GlStateManager.disableLighting();
+        } else if (drawContext.hoverText != null) {
+            GuiUtils.drawHoveringText(drawContext.hoverText, mouseX, mouseY, 600, 400, -1, fontRenderer);
         }
 
         fileNameTextField.drawTextBox();
         saveGuiButton.drawButton(mc, mouseX, mouseY, partialTicks);
+        resetGuiButton.drawButton(mc, mouseX, mouseY, partialTicks);
         planItems.draw(drawContext);
 
         dragStack.draw(drawContext);
@@ -147,6 +160,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         goals.getArea().setLocation(guiLeft, 20);
 
         requiredItems.getArea().setLocation(guiLeft, 250);
+        inventory.getArea().setLocation(guiLeft + requiredItems.getArea().width, 250);
 
         planItems.setDimensions(xSize / 2, 60, 20, 84);
         planItems.left = guiLeft + xSize / 2;
@@ -157,7 +171,8 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         fileNameTextField.x = guiLeft + xSize / 2;
         fileNameTextField.width = xSize / 2 - 70;
 
-        saveGuiButton.x = guiLeft + xSize - 70;
+        saveGuiButton.x = guiLeft + xSize - 50;
+        resetGuiButton.x = guiLeft;
 
         dragStack.setDraggedStack(null);
         dragStack.setJeiLeft(guiLeft + xSize);
@@ -178,6 +193,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
                 craftingSteps.handleMouseInput();
                 planItems.handleMouseInput();
                 requiredItems.handleMouseInput();
+                inventory.handleMouseInput();
             }
         }
 
@@ -212,6 +228,10 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
             savePlan();
             return;
         }
+        if (resetGuiButton.isMouseOver()) {
+            resetPlan();
+            return;
+        }
         if (goals.getArea().contains(x, y)) {
             PlannerIngredientStack draggedStack = dragStack.getDraggedStack();
             if (draggedStack != null) {
@@ -232,6 +252,31 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
             }
             return;
         }
+
+        if (inventory.getArea().contains(x, y)) {
+            PlannerIngredientStack draggedStack = dragStack.getDraggedStack();
+            if (draggedStack != null) {
+                inventory.getIngredients().add(draggedStack);
+                dragStack.setDraggedStack(null);
+                plan.addInventoryStack(draggedStack);
+            } else {
+                PlannerIngredientStack stack = inventory.getStackAt(x, y);
+                if (stack != null) {
+                    inventory.getIngredients().remove(stack);
+                    plan.getInventory().stream()
+                            .filter(i -> i.equals(stack))
+                            .findFirst()
+                            .ifPresent(plan::removeInventoryItem);
+                    dragStack.setDraggedStack(stack);
+                }
+
+            }
+            return;
+        }
+    }
+
+    private void resetPlan() {
+        setPlan(new CraftingPlan());
     }
 
     private void savePlan() {
@@ -254,6 +299,7 @@ public class PlannerGui extends GuiContainer implements CraftingPlanListeners {
         updateGoals(plan.getGoals());
         updateCraftingSteps(plan.getRecipes());
         updateRequired(plan.getRequired());
+        updateInventory(plan.getInventory());
         updatePlanItems();
 
         fileNameTextField.setText(plan.getName());
