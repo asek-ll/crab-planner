@@ -31,10 +31,6 @@ public abstract class RectangleWidget extends AbstractList.AbstractListEntry<Rec
         return rect;
     }
 
-    public void setSize(int w, int h) {
-        rect.setSize(w, h);
-    }
-
     @Override
     public void render(MatrixStack ms, int idx, int top, int left, int width, int height, int mouseX, int mouseY, boolean isOver, float partial) {
         rect.setBounds(left, top, width, height);
@@ -51,4 +47,5 @@ public abstract class RectangleWidget extends AbstractList.AbstractListEntry<Rec
         }
         draw(ctx);
     }
+
 }

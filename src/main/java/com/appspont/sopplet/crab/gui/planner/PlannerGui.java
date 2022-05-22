@@ -6,10 +6,12 @@ import com.appspont.sopplet.crab.planner.CraftingRecipe;
 import com.appspont.sopplet.crab.planner.PlanStoreManager;
 import com.appspont.sopplet.crab.container.CraftingPlanContainer;
 import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
+import com.appspont.sopplet.crab.planner.PlannerRecipe;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.recipe.IFocus;
@@ -30,6 +32,7 @@ import net.minecraftforge.fml.client.gui.GuiUtils;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.awt.*;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -163,9 +166,12 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         this.imageHeight = height;
 
         goals.getArea().setLocation(guiLeft, 20);
+        addWidget(goals);
+
         planItems.updateSize(goals.getArea().width, 60, 20, 84);
         planItems.setLeftPos(guiLeft + goals.getArea().width);
         planItems.setRenderTopAndBottom(false);
+        addWidget(planItems);
 
         int xSize = goals.getArea().width + planItems.getWidth();
         this.imageWidth = xSize;
@@ -173,24 +179,24 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         craftingSteps.updateSize(xSize, 160, 86, 250);
         craftingSteps.setLeftPos(guiLeft);
         craftingSteps.setRenderTopAndBottom(false);
+        addWidget(craftingSteps);
 
         requiredItems.getArea().setLocation(guiLeft, 250);
+        addWidget(requiredItems);
         inventory.getArea().setLocation(guiLeft + requiredItems.getArea().width, 250);
+        addWidget(inventory);
 
         widgetWidgetContainer.updateBounds();
 
         fileNameTextField.setX(guiLeft + xSize / 2);
         fileNameTextField.setWidth(xSize / 2 - 70);
+        addWidget(fileNameTextField);
 
         saveGuiButton.x = guiLeft + xSize - saveGuiButton.getWidth();
         resetGuiButton.x = guiLeft;
 
         dragStack.setDraggedStack(null);
         dragStack.setJeiLeft(guiLeft + xSize);
-
-        addWidget(fileNameTextField);
-        addWidget(planItems);
-        addWidget(craftingSteps);
     }
 
     private RecipeGui getRecipeGui() {
@@ -238,7 +244,12 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
                 minecraft.setScreen(gui);
                 jeiRuntime.getRecipesGui().show(focus);
                 if (minecraft.screen == gui) {
-                    minecraft.setScreen(this);
+                    gui.setRecipe(new PlannerRecipe(
+                            Collections.singletonList(stack),
+                            Collections.emptyList(),
+                            Collections.emptyList()
+                    ));
+//                    minecraft.setScreen(this);
                 }
                 return true;
             }
@@ -315,6 +326,7 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
 
         fileNameTextField.setValue(plan.getName());
         fileNameTextField.setCursorPosition(0);
+        fileNameTextField.setHighlightPos(0);
     }
 
     @Override

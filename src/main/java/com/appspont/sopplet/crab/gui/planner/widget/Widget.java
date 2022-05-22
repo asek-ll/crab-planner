@@ -7,4 +7,5 @@ public interface Widget extends IGuiEventListener {
     void draw(DrawContext context);
 
     boolean mouseClicked(int x, int y, int button);
+
 }

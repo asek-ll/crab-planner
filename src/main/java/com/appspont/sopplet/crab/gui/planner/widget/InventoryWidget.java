@@ -79,6 +79,7 @@ public class InventoryWidget extends AbstractGui implements Widget, Rectangleabl
 //                    GlStateManager.disableDepth();
 //                    GlStateManager.colorMask(true, true, true, false);
 //                    this.drawGradientRect(x1, y1, x1 + 16, y1 + 16, -2130706433, -2130706433);
+                    this.fillGradient(context.ms, x1, y1, x1 + 16, y1 + 16, -2130706433, -2130706433);
 //                    GlStateManager.colorMask(true, true, true, true);
 //                    GlStateManager.enableLighting();
 //                    GlStateManager.enableDepth();
@@ -95,14 +96,14 @@ public class InventoryWidget extends AbstractGui implements Widget, Rectangleabl
 //        GlStateManager.disableBlend();
 
 
-//        this.mc.getTextureManager().bindTexture(CREATIVE_INVENTORY_TABS);
+        this.mc.getTextureManager().bind(CREATIVE_INVENTORY_TABS);
 
         int rows = (int) Math.ceil((double) ingredients.size() / inventoryColumns);
         int excessRows = rows - inventoryRows;
         boolean hasScroll = excessRows > 0;
         double ratio = hasScroll ? (double) scrolledBy / excessRows : 0.0;
         int offset = (int) ((inventoryRows * 18 - 15) * ratio);
-//        this.drawTexturedModalRect(area.x + 175, area.y + 18 + offset, 232 + (hasScroll ? 0 : 12), 0, 12, 15);
+        this.blit(context.ms, area.x + 175, area.y + 18 + offset, 232 + (hasScroll ? 0 : 12), 0, 12, 15);
 
 //        int rgb = Color.RED.getRGB();
 //        drawHorizontalLine(area.x, area.x + area.width, area.y, rgb);
@@ -147,25 +148,28 @@ public class InventoryWidget extends AbstractGui implements Widget, Rectangleabl
         return null;
     }
 
-//    public void handleMouseInput() throws IOException {
-//        if (!area.contains(mouseX, mouseY)) {
-//            return;
-//        }
-//        int i = Mouse.getEventDWheel();
-//        if (i != 0) {
-//            int rows = (int) Math.ceil((double) ingredients.size() / inventoryColumns);
-//            int excessRows = rows - inventoryRows;
-//            if (excessRows > 0) {
-//                if (i < 0) {
-//                    if (rows - scrolledBy > inventoryRows) {
-//                        scrolledBy += 1;
-//                    }
-//                } else {
-//                    if (scrolledBy > 0) {
-//                        scrolledBy -= 1;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    @Override
+    public boolean mouseScrolled(double scrollX, double scrollY, double scrollDelta) {
+        if (scrollDelta != 0) {
+            int rows = (int) Math.ceil((double) ingredients.size() / inventoryColumns);
+            int excessRows = rows - inventoryRows;
+            if (excessRows > 0) {
+                if (scrollDelta < 0) {
+                    if (rows - scrolledBy > inventoryRows) {
+                        scrolledBy += 1;
+                    }
+                } else {
+                    if (scrolledBy > 0) {
+                        scrolledBy -= 1;
+                    }
+                }
+            }
+        }
+        return Widget.super.mouseScrolled(scrollX, scrollY, scrollDelta);
+    }
+
+    @Override
+    public boolean isMouseOver(double x, double y) {
+        return getArea().contains(x, y);
+    }
 }

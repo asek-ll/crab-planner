@@ -52,7 +52,6 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
     private final List<InventoryWidget> inventories;
     private final Button saveButton;
     private final Button cancelButton;
-    private IRecipeLayout recipeLayout;
     private DragStack dragStack;
     private Screen parentScreen;
     private CraftingPlan plan;
@@ -76,8 +75,10 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
     }
 
     public void setRecipe(IRecipeLayout recipeLayout) {
-        this.recipeLayout = recipeLayout;
-        PlannerRecipe plannerRecipe = prepareRecipe(recipeLayout);
+        setRecipe(prepareRecipe(recipeLayout));
+    }
+
+    public void setRecipe(PlannerRecipe plannerRecipe) {
         results.setStacks(plannerRecipe.getResult());
         catalysts.setStacks(plannerRecipe.getCatalysts());
         ingredients.setStacks(plannerRecipe.getIngredients());
@@ -158,10 +159,15 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
 
         results.getArea().setLocation(leftPos, yOffset);
         yOffset += results.getArea().getHeight();
+        addWidget(results);
+
         catalysts.getArea().setLocation(leftPos, yOffset);
         yOffset += catalysts.getArea().getHeight();
+        addWidget(catalysts);
+
         ingredients.getArea().setLocation(leftPos, yOffset);
         yOffset += ingredients.getArea().getHeight() + 2;
+        addWidget(ingredients);
 
         int xOffset = leftPos;
 
@@ -181,10 +187,6 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
     @Override
     public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
         super.render(ms, mouseX, mouseY, partialTicks);
-
-        if (recipeLayout == null) {
-            return;
-        }
 
         drawContext.mouseX = mouseX;
         drawContext.mouseY = mouseY;
@@ -248,7 +250,7 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
                     dragStack.setDraggedStack(stack);
                     return true;
                 }
-                if (inventory.mouseClicked((int)mouseX, (int)mouseY, button)) {
+                if (inventory.mouseClicked((int) mouseX, (int) mouseY, button)) {
                     return true;
                 }
             }
@@ -289,5 +291,12 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
 
     public void setPlan(CraftingPlan plan) {
         this.plan = plan;
+    }
+
+    @Override
+    public void onClose() {
+        if (parentScreen != null) {
+            minecraft.setScreen(parentScreen);
+        }
     }
 }
