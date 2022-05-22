@@ -1,17 +1,16 @@
-package com.appspont.sopplet.crab.gui;
+package com.appspont.sopplet.crab.gui.planner;
 
-import com.appspont.sopplet.crab.CraftingPlan;
-import com.appspont.sopplet.crab.PlannerRecipe;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.planner.PlannerRecipe;
 import com.appspont.sopplet.crab.container.RecipeContainer;
-import com.appspont.sopplet.crab.gui.planner.DragStack;
-import com.appspont.sopplet.crab.gui.planner.DrawContext;
-import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
+import com.appspont.sopplet.crab.gui.planner.widget.DragStack;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import com.appspont.sopplet.crab.gui.planner.widget.InventoryWidget;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerFluidStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredient;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerItemStack;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
@@ -40,7 +39,7 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.appspont.sopplet.crab.gui.PlannerGui.NO_PRESSABLE;
+import static com.appspont.sopplet.crab.gui.planner.PlannerGui.NO_PRESSABLE;
 
 public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMouseClickInterceptor {
 
@@ -72,7 +71,6 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
 
         dragStack = new DragStack(mc, ingredientRenderer);
 
-//        this.guiLeft = (width - xSize) / 2;
         saveButton = new Button(0, 0, 70 - 8, 20, new StringTextComponent("Save"), NO_PRESSABLE);
         cancelButton = new Button(0, 0, 70 - 8, 20, new StringTextComponent("Cancel"), NO_PRESSABLE);
     }
@@ -183,7 +181,6 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
     @Override
     public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
         super.render(ms, mouseX, mouseY, partialTicks);
-//        drawDefaultBackground();
 
         if (recipeLayout == null) {
             return;
@@ -260,80 +257,6 @@ public class RecipeGui extends ContainerScreen<RecipeContainer> implements JeiMo
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-
-    //    @Override
-//    protected void mouseClicked(int x, int y, int p_mouseClicked_3_) throws IOException {
-//        PlannerIngredientStack draggedStack = dragStack.getDraggedStack();
-//        for (InventoryWidget inventory : inventories) {
-//            if (inventory.getArea().contains(x, y)) {
-//                if (draggedStack != null) {
-//                    inventory.getIngredients().add(draggedStack);
-//                    dragStack.setDraggedStack(null);
-//                } else {
-//                    PlannerIngredientStack stack = inventory.getStackAt(x, y);
-//                    if (stack != null) {
-//                        inventory.getIngredients().remove(stack);
-//                        dragStack.setDraggedStack(stack);
-//                    } else if (inventory.mouseClicked(x, y, p_mouseClicked_3_)) {
-//                        return;
-//                    }
-//                }
-//                return;
-//            }
-//        }
-//        if (cancelButton.isMouseOver()) {
-//            minecraft.setScreen(parentScreen);
-//            return;
-//        }
-//
-//        if (saveButton.isMouseOver()) {
-//            if (plan != null) {
-//                PlannerRecipe plannerRecipe = new PlannerRecipe(
-//                        compactItems(results.getIngredients()),
-//                        compactItems(ingredients.getIngredients()),
-//                        compactItems(catalysts.getIngredients()));
-//                plan.addRecipe(plannerRecipe);
-//            }
-//            minecraft.setScreen(parentScreen);
-//            return;
-//        }
-//
-//    }
-//
-//    public void handleInput() throws IOException {
-//        if (Mouse.isCreated()) {
-//            while (Mouse.next()) {
-//                if (!dragStack.interceptMouseClick()) {
-//                    if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Pre(this))) {
-//                        this.handleMouseInput();
-//                        if (this.equals(this.mc.currentScreen)) {
-//                            MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Post(this));
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        if (Keyboard.isCreated()) {
-//            while (Keyboard.next()) {
-//                if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre(this))) {
-//                    this.handleKeyboardInput();
-//                    if (this.equals(this.mc.currentScreen)) {
-//                        MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Post(this));
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public void handleMouseInput() throws IOException {
-//        super.handleMouseInput();
-//        for (InventoryWidget inventory : inventories) {
-//            inventory.handleMouseInput();
-//        }
-//    }
-//
     @Override
     public boolean keyPressed(int key, int code, int m) {
         if (dragStack.keyTyped(key, code, m)) {

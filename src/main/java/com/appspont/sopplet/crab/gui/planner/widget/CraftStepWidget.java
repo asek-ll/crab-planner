@@ -1,7 +1,9 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.CraftingRecipe;
-import com.appspont.sopplet.crab.PlannerRecipe;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
+import com.appspont.sopplet.crab.planner.CraftingRecipe;
+import com.appspont.sopplet.crab.planner.PlannerRecipe;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -35,7 +37,7 @@ public class CraftStepWidget extends RectangleWidget implements INestedGuiEventH
 
         x += 24;
 
-        String count = IngredientRenderer.compactCount(recipe.getCount());
+        String count = IngredientRenderer.formatItemAmount(recipe.getCount());
         mc.font.drawShadow(context.ms, count, x + 1, rect.y + 5, Color.white.getRGB());
 
         if (recipe.getCount() > 10_000 &&

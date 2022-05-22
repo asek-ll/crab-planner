@@ -1,8 +1,8 @@
 package com.appspont.sopplet.crab.command;
 
-import com.appspont.sopplet.crab.RecipeExporter;
+import com.appspont.sopplet.crab.exporter.RecipeExporter;
 import com.appspont.sopplet.crab.gui.GuiItemIconDumper;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.mojang.brigadier.CommandDispatcher;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;

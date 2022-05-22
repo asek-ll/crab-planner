@@ -1,5 +1,8 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.planner;
 
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.planner.CraftingRecipe;
+import com.appspont.sopplet.crab.planner.PlannerRecipe;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
 import com.google.gson.Gson;

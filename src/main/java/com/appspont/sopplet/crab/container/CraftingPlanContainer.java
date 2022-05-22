@@ -1,6 +1,6 @@
 package com.appspont.sopplet.crab.container;
 
-import com.appspont.sopplet.crab.CraftingPlan;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;

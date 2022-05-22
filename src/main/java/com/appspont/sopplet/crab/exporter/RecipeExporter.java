@@ -1,9 +1,8 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.exporter;
 
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.StackUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;

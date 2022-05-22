@@ -1,6 +1,7 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.planner;
 
-import com.appspont.sopplet.crab.gui.planner.CraftingPlanListeners;
+import com.appspont.sopplet.crab.StackUtils;
+import com.appspont.sopplet.crab.gui.planner.widget.CraftingPlanListeners;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredient;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;

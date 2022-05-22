@@ -1,6 +1,6 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.gui.PlannerGui;
+import com.appspont.sopplet.crab.gui.planner.PlannerGui;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;

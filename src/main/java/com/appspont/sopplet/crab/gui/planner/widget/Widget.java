@@ -1,5 +1,6 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
 import net.minecraft.client.gui.IGuiEventListener;
 
 public interface Widget extends IGuiEventListener {

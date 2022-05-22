@@ -1,14 +1,14 @@
-package com.appspont.sopplet.crab.gui;
+package com.appspont.sopplet.crab.gui.planner;
 
-import com.appspont.sopplet.crab.CraftingPlan;
-import com.appspont.sopplet.crab.CraftingRecipe;
-import com.appspont.sopplet.crab.PlanStoreManager;
+import com.appspont.sopplet.crab.gui.planner.widget.*;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.planner.CraftingRecipe;
+import com.appspont.sopplet.crab.planner.PlanStoreManager;
 import com.appspont.sopplet.crab.container.CraftingPlanContainer;
-import com.appspont.sopplet.crab.gui.planner.*;
-import com.appspont.sopplet.crab.gui.planner.widget.InventoryWidget;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerGoal;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mezz.jei.api.ingredients.IIngredientRenderer;
@@ -27,29 +27,22 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@ParametersAreNonnullByDefault
 public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implements CraftingPlanListeners,
         JeiMouseClickInterceptor {
 
     public static Button.IPressable NO_PRESSABLE = btn -> {
     };
 
-    public static Button.ITooltip NO_TOOLTIP = new Button.ITooltip() {
-
-        @Override
-        public void onTooltip(Button p_onTooltip_1_, MatrixStack p_onTooltip_2_, int p_onTooltip_3_, int p_onTooltip_4_) {
-
-        }
-    };
-
     private CraftingPlan plan;
     private final InventoryWidget goals;
     private final WidgetContainer<InventoryWidget> widgetWidgetContainer;
-    private final int backgroundColor;
     private final DrawContext drawContext;
     private final CraftingStepsWidget craftingSteps;
     private final InventoryWidget requiredItems;
@@ -89,10 +82,8 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
 
     public PlannerGui(CraftingPlan plan) {
         super(new CraftingPlanContainer(plan), Minecraft.getInstance().player.inventory, new StringTextComponent("Planner"));
-//        super(new CraftingPlanContainer(plan));
         minecraft = Minecraft.getInstance();
         planStoreManager = CrabJeiPlugin.getPlanStoreManager();
-        backgroundColor = new Color(0, 0, 0, 128).getRGB();
         ingredientRegistry = CrabJeiPlugin.getJeiRuntime().getIngredientManager();
         IngredientRenderer ingredientRenderer = new IngredientRenderer(ingredientRegistry, minecraft);
 
@@ -112,8 +103,8 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         fileNameTextField = new TextFieldWidget(minecraft.font, 1, 0, 18, 18,
                 new StringTextComponent("Btn"));
 
-        saveGuiButton = new Button(0, 0, 50 - 8, 20, new StringTextComponent("Save"), NO_PRESSABLE, NO_TOOLTIP);
-        resetGuiButton = new Button(0, 0, 50 - 8, 20, new StringTextComponent("Reset"), NO_PRESSABLE, NO_TOOLTIP);
+        saveGuiButton = new Button(0, 0, 50 - 8, 20, new StringTextComponent("Save"), NO_PRESSABLE);
+        resetGuiButton = new Button(0, 0, 50 - 8, 20, new StringTextComponent("Reset"), NO_PRESSABLE);
 
         setPlan(plan);
     }
@@ -129,10 +120,6 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         drawContext.ms = ms;
 
         renderBg(ms, partialTicks, mouseX, mouseY);
-
-//        this.drawDefaultBackground();
-
-//        super.drawScreen(mouseX, mouseY, partialTicks);
 
         goals.draw(drawContext);
         craftingSteps.draw(drawContext);
@@ -167,11 +154,6 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         renderBackground(ms);
     }
 
-    //    @Override
-//    protected void drawGuiContainerBackgroundLayer(float ticks, int x, int y) {
-//        drawRect(guiLeft, guiTop, xSize, ySize, backgroundColor);
-//    }
-//
     @Override
     public void init(Minecraft mc, int width, int height) {
         super.init(mc, width, height);
@@ -304,45 +286,6 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         }
     }
 
-    //    public void handleInput() throws IOException {
-//        if (Mouse.isCreated()) {
-//            while (Mouse.next()) {
-//                if (!dragStack.interceptMouseClick()) {
-//                    if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Pre(this))) {
-//                        this.handleMouseInput();
-//                        if (this.equals(this.mc.currentScreen)) {
-//                            MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Post(this));
-//                        }
-//                    }
-//                }
-//                goals.handleMouseInput();
-//                craftingSteps.handleMouseInput();
-//                planItems.handleMouseInput();
-//                requiredItems.handleMouseInput();
-//                inventory.handleMouseInput();
-//            }
-//        }
-//
-//        if (Keyboard.isCreated()) {
-//            while (Keyboard.next()) {
-//                if (!MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre(this))) {
-//                    this.handleKeyboardInput();
-//                    if (this.equals(this.mc.currentScreen)) {
-//                        MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Post(this));
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    @Override
-//    protected void mouseClicked(int x, int y, int button) {
-//        fileNameTextField.mouseClicked(x, y, button);
-//
-//            return;
-//        }
-//    }
-
     private void resetPlan() {
         setPlan(new CraftingPlan());
     }
@@ -362,7 +305,6 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
             this.plan.removeListener(this);
         }
         this.plan = plan;
-//        ((CraftingPlanContainer) inventorySlots).setPlan(plan);
         plan.addListener(this);
 
         updateGoals(plan.getGoals());
@@ -406,33 +348,4 @@ public class PlannerGui extends ContainerScreen<CraftingPlanContainer> implement
         }
         return super.charTyped(ch, param1);
     }
-
-
-    //
-//    @Override
-//    protected void keyTyped(char key, int eventKey) throws IOException {
-//
-//        if (fileNameTextField.textboxKeyTyped(key, eventKey)) {
-//            plan.setName(fileNameTextField.getText());
-//            return;
-//        }
-//
-//        if (dragStack.keyTyped(key, eventKey)) {
-//            return;
-//        }
-//
-////        if (stack.guiTextField.isFocused()) {
-////
-////            final char c = Character.toUpperCase(key);
-////            if (c < 32 || (c >= '0' && c <= '9')) {
-////                stack.guiTextField.textboxKeyTyped(key, eventKey);
-////                try {
-////                    final int i = Integer.parseInt(stack.guiTextField.getText());
-////                    stack.stack.setCount(i);
-////                } catch (NumberFormatException ignored) {
-////                }
-////            }
-////        }
-//        super.keyTyped(key, eventKey);
-//    }
 }

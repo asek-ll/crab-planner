@@ -1,7 +1,9 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.collect.Lists;
 import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.runtime.IJeiRuntime;

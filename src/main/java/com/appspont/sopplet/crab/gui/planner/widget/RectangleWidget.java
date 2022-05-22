@@ -1,6 +1,6 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.gui.planner.widget.Rectangleable;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.list.AbstractList;

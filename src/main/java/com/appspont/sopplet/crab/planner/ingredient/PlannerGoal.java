@@ -1,6 +1,6 @@
 package com.appspont.sopplet.crab.planner.ingredient;
 
-import com.appspont.sopplet.crab.CraftingPlan;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;

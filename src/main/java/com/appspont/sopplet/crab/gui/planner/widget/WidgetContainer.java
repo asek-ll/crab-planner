@@ -1,6 +1,6 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.gui.planner.widget.Rectangleable;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
 
 import java.awt.*;
 import java.util.List;

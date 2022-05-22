@@ -1,7 +1,7 @@
 package com.appspont.sopplet.crab.gui;
 
 import com.appspont.sopplet.crab.StackUtils;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -32,7 +32,6 @@ public class GuiItemIconDumper extends Screen {
 
     private final Map<IIngredientType<?>, IIngredientRenderer<?>> renderers = new HashMap<>();
     private final List<Object> visibleStacks = new ArrayList<>();
-
 
     private int drawIndex;
     private int parseIndex;

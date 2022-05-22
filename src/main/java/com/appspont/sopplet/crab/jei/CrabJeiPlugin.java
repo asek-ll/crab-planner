@@ -1,8 +1,7 @@
-package com.appspont.sopplet.crab.plugin;
+package com.appspont.sopplet.crab.jei;
 
 import com.appspont.sopplet.crab.CrabDumperMod;
-import com.appspont.sopplet.crab.PlanStoreManager;
-import com.appspont.sopplet.crab.PlannerContainerTransferHandler;
+import com.appspont.sopplet.crab.planner.PlanStoreManager;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.MethodsReturnNonnullByDefault;
@@ -17,7 +16,7 @@ import net.minecraft.util.ResourceLocation;
 public class CrabJeiPlugin implements IModPlugin {
 
     private static IJeiRuntime jeiRuntime;
-    private static PlanStoreManager planStoreManager = new PlanStoreManager();
+    private static final PlanStoreManager planStoreManager = new PlanStoreManager();
     private static IJeiHelpers jeiHelpers;
 
     @Override

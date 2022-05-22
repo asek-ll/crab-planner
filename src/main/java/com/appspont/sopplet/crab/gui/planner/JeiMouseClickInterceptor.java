@@ -1,4 +1,4 @@
-package com.appspont.sopplet.crab.gui;
+package com.appspont.sopplet.crab.gui.planner;
 
 import net.minecraftforge.client.event.GuiScreenEvent;
 

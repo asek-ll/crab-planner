@@ -1,8 +1,9 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.CraftingPlan;
-import com.appspont.sopplet.crab.gui.PlannerGui;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.gui.planner.PlannerGui;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.INestedGuiEventHandler;
 import net.minecraft.client.gui.widget.button.Button;

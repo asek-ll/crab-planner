@@ -1,9 +1,10 @@
 package com.appspont.sopplet.crab;
 
 import com.appspont.sopplet.crab.config.KeyBindings;
-import com.appspont.sopplet.crab.gui.JeiMouseClickInterceptor;
-import com.appspont.sopplet.crab.gui.PlannerGui;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.gui.planner.JeiMouseClickInterceptor;
+import com.appspont.sopplet.crab.gui.planner.PlannerGui;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputMappings;
@@ -12,10 +13,8 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(CrabDumperMod.MOD_ID)
 @Mod.EventBusSubscriber

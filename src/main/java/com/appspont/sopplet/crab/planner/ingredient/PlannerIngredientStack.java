@@ -1,7 +1,6 @@
 package com.appspont.sopplet.crab.planner.ingredient;
 
-import com.appspont.sopplet.crab.JsonAware;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

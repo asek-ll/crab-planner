@@ -1,10 +1,8 @@
 package com.appspont.sopplet.crab.gui.planner.widget;
 
 import com.appspont.sopplet.crab.gui.planner.DrawContext;
-import com.appspont.sopplet.crab.gui.planner.IngredientRenderer;
-import com.appspont.sopplet.crab.gui.planner.Widget;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;

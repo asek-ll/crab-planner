@@ -1,8 +1,8 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.renderer;
 
-import com.appspont.sopplet.crab.gui.planner.renderer.FluidStackRenderer;
+import com.appspont.sopplet.crab.gui.planner.DrawContext;
 import com.appspont.sopplet.crab.planner.ingredient.PlannerIngredientStack;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.runtime.IIngredientManager;
@@ -17,12 +17,10 @@ public class IngredientRenderer {
 
     private final IIngredientManager ingredientRegistry;
     private final Minecraft mc;
-    private final FluidStackRenderer fluidStackRenderer;
 
     public IngredientRenderer(IIngredientManager ingredientRegistry, Minecraft mc) {
         this.ingredientRegistry = ingredientRegistry;
         this.mc = mc;
-        fluidStackRenderer = new FluidStackRenderer();
     }
 
     public void render(int x, int y, PlannerIngredientStack stack, DrawContext context) {
@@ -35,7 +33,7 @@ public class IngredientRenderer {
                     .getIngredientRenderer(rawStack);
             renderer.render(context.ms, x, y, rawStack);
             FontRenderer font = renderer.getFontRenderer(mc, stack);
-            renderSizeLabel(font, FluidStackRenderer.formatAmount(((FluidStack) rawStack).getAmount()), x, y);
+            renderSizeLabel(font, formatFluidAmount(((FluidStack) rawStack).getAmount()), x, y);
         } else {
             IIngredientRenderer<Object> renderer = CrabJeiPlugin.getJeiRuntime().getIngredientManager()
                     .getIngredientRenderer(rawStack);
@@ -69,12 +67,12 @@ public class IngredientRenderer {
         int count = stack.getCount();
         if (count > 1) {
             FontRenderer font = renderer.getFontRenderer(mc, stack);
-            renderSizeLabel(font, compactCount(count), x, y);
+            renderSizeLabel(font, formatItemAmount(count), x, y);
         }
 
     }
 
-    public static String compactCount(int count) {
+    public static String formatItemAmount(int count) {
         if (count < 10_000) {
             return String.valueOf(count);
         }
@@ -86,6 +84,35 @@ public class IngredientRenderer {
             return count / 1_000_000 + "M";
         }
         return String.valueOf(count);
+    }
+
+    public static String formatFluidAmount(Integer amount) {
+
+        if (amount < 100) {
+            return amount + "mB";
+        }
+
+        if (amount < 1_000_000) {
+            return toLimitedString(amount, 1_000, 3) + "B";
+        }
+
+        return toLimitedString(amount, 1_000_000, 2) + "KB";
+    }
+
+    private static String toLimitedString(int amount, int bound, int limit) {
+        int result = amount / bound;
+        String part = String.valueOf(result);
+        int secondPartSize = limit - part.length() - 1;
+        if (secondPartSize <= 0) {
+            return part;
+        }
+
+        int mult = (int) (bound / Math.pow(10, secondPartSize));
+        int decimalPart = (amount - result * bound) / mult;
+        if (decimalPart == 0) {
+            return part;
+        }
+        return part + "." + decimalPart;
     }
 
     public static void renderSizeLabel(FontRenderer fontRenderer, String text, float xPos, float yPos) {

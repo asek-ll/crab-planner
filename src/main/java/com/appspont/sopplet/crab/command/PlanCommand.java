@@ -1,8 +1,8 @@
 package com.appspont.sopplet.crab.command;
 
-import com.appspont.sopplet.crab.CraftingPlan;
-import com.appspont.sopplet.crab.gui.PlannerGui;
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.planner.CraftingPlan;
+import com.appspont.sopplet.crab.gui.planner.PlannerGui;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import com.mojang.brigadier.CommandDispatcher;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;

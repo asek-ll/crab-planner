@@ -1,4 +1,4 @@
-package com.appspont.sopplet.crab;
+package com.appspont.sopplet.crab.planner;
 
 import com.google.gson.*;
 

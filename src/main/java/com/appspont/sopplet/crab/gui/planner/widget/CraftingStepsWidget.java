@@ -1,6 +1,7 @@
-package com.appspont.sopplet.crab.gui.planner;
+package com.appspont.sopplet.crab.gui.planner.widget;
 
-import com.appspont.sopplet.crab.CraftingRecipe;
+import com.appspont.sopplet.crab.planner.CraftingRecipe;
+import com.appspont.sopplet.crab.gui.planner.renderer.IngredientRenderer;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;

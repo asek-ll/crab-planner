@@ -1,6 +1,6 @@
 package com.appspont.sopplet.crab.planner.ingredient;
 
-import com.appspont.sopplet.crab.plugin.CrabJeiPlugin;
+import com.appspont.sopplet.crab.jei.CrabJeiPlugin;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.item.ItemStack;
 
